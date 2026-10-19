@@ -1,10 +1,13 @@
-<!DOCTYPE html>
+# -*- coding: utf-8 -*-
+import os
+
+html_template = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:,">
-<title>魔点 AB 门 (双门联动互锁) 接线示意图 - 交互编辑与高清查看</title>
+<title>联动门控制主机 (BJRANDE-760) 双门互锁接线示意图 - 在线编辑与端子精准查看</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -85,7 +88,6 @@
 
   .divider { width: 1px; height: 18px; background: #475569; margin: 0 2px; }
 
-  /* 二级划线属性工具栏 */
   #draw-toolbar {
     background: #162032;
     border-bottom: 1px solid #334155;
@@ -156,7 +158,6 @@
     background: #ffffff;
   }
 
-  /* 提示条 */
   .hint-toast {
     position: absolute;
     bottom: 12px;
@@ -185,7 +186,6 @@
     font-weight: 600;
   }
 
-  /* 导线选中手柄样式 */
   .wire-handle {
     fill: #0ea5e9;
     stroke: #ffffff;
@@ -205,7 +205,6 @@
     to { transform: rotate(360deg); }
   }
 
-  /* 可编辑文本样式 */
   text.editable { cursor: text; transition: opacity 0.15s; }
   text.editable:hover { opacity: 0.75; fill: #0284c7 !important; }
   .text-editing-input {
@@ -229,9 +228,9 @@
   <div class="title-group">
     <h1>
       <svg class="icon" style="width:16px;height:16px;stroke:#38bdf8;stroke-width:2;fill:none;" viewBox="0 0 24 24"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7H3l2-4h14l2 4M5 21V10.85M19 21V10.85"/></svg>
-      魔点 AB 门 (双门联动互锁) 标准接线拓扑
+      联动门控制主机 (BJRANDE-760) 双门互锁接线标准图
     </h1>
-    <p>深度参考魔点实物控制器外观 ｜ 支持双击改字 · 自由折线划线 · 端子磁吸 · 40步撤销 · 导出高清工程图</p>
+    <p>严格按照实物丝印与端口排布 ｜ 1:1 精准对应 · 端子走线清晰明了 · 支持在线自由划线与导出</p>
   </div>
   
   <div class="toolbar">
@@ -276,12 +275,11 @@
   </div>
 </header>
 
-<!-- 二级划线属性与走线工具栏 -->
 <div id="draw-toolbar">
   <div class="tool-section">
     <span class="tool-label">走线模式:</span>
     <select id="line-mode-select" class="select-styled">
-      <option value="orthogonal" selected>↱ 直角折线 (电气规范推荐)</option>
+      <option value="orthogonal" selected>↱ 直角折线 (电气接线推荐)</option>
       <option value="straight">╱ 直线 (按住 Shift 水平/垂直)</option>
       <option value="polyline">⟿ 多段连续折线 (双击/Enter结束)</option>
     </select>
@@ -289,23 +287,21 @@
 
   <div class="tool-section">
     <span class="tool-label">导线类型/颜色:</span>
-    <div class="color-swatch active" data-color="#dc2626" style="background:#dc2626;" title="电源 +12V (正极红)"></div>
-    <div class="color-swatch" data-color="#475569" style="background:#475569;" title="公共端 GND (接地深灰)"></div>
-    <div class="color-swatch" data-color="#16a34a" style="background:#16a34a;" title="开门信号线 (触发绿)"></div>
-    <div class="color-swatch" data-color="#0284c7" style="background:#0284c7;" title="锁控输出 L+/门磁回路 (互锁蓝)"></div>
+    <div class="color-swatch active" data-color="#dc2626" style="background:#dc2626;" title="电源 +12V / 开门NO (正极红)"></div>
+    <div class="color-swatch" data-color="#1e293b" style="background:#1e293b;" title="公共端 GND / COM (公共黑)"></div>
+    <div class="color-swatch" data-color="#0284c7" style="background:#0284c7;" title="门磁常开 NO (信号蓝)"></div>
+    <div class="color-swatch" data-color="#16a34a" style="background:#16a34a;" title="门磁公共 COM (信号绿)"></div>
     <div class="color-swatch" data-color="#f97316" style="background:#f97316;" title="RS485-A (橙色通讯线)"></div>
     <div class="color-swatch" data-color="#9333ea" style="background:#9333ea;" title="RS485-B (紫色通讯线)"></div>
-    <div class="color-swatch" data-color="#0f172a" style="background:#0f172a;" title="信号/控制黑线"></div>
     <input type="color" id="custom-color-picker" value="#dc2626" style="width:24px;height:24px;border:none;background:none;cursor:pointer;" title="自定义颜色">
   </div>
 
   <div class="tool-section">
     <span class="tool-label">线宽:</span>
     <select id="line-width-select" class="select-styled">
-      <option value="1.5">1.5px (标准信号细线)</option>
-      <option value="2.2" selected>2.2px (主干回路推荐)</option>
-      <option value="3.0">3.0px (粗线)</option>
-      <option value="4.0">4.0px (特粗主电源)</option>
+      <option value="1.8">1.8px (标准细线)</option>
+      <option value="2.4" selected>2.4px (推荐接线粗细)</option>
+      <option value="3.2">3.2px (粗线)</option>
     </select>
   </div>
 
@@ -323,8 +319,8 @@
     <select id="line-arrow-select" class="select-styled">
       <option value="dot" selected>● 接线圆点 (端子连接)</option>
       <option value="end-arrow">➔ 终点箭头 (信号流向)</option>
-      <option value="both-arrow">⇄ 双向箭头 (互锁/总线)</option>
-      <option value="none">─ 无端点 (纯导线)</option>
+      <option value="both-arrow">⇄ 双向箭头 (总线)</option>
+      <option value="none">─ 无端点</option>
     </select>
   </div>
 
@@ -339,491 +335,610 @@
 
 <main id="canvas-container">
   <div id="svg-viewport">
-    <svg id="main-svg" width="1400" height="920" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg">
+    <svg id="main-svg" width="1600" height="1180" viewBox="0 0 1600 1180" xmlns="http://www.w3.org/2000/svg">
       <defs id="svg-defs">
         <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
           <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.08"/>
         </filter>
-        <filter id="controller-shadow" x="-10%" y="-5%" width="120%" height="112%">
-          <feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity="0.22"/>
+        <filter id="controller-shadow" x="-5%" y="-3%" width="110%" height="108%">
+          <feDropShadow dx="0" dy="8" stdDeviation="12" flood-opacity="0.25"/>
         </filter>
-        <linearGradient id="controller-body-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#242b38"/>
-          <stop offset="50%" stop-color="#181e28"/>
-          <stop offset="100%" stop-color="#12161f"/>
+        <!-- 工业金属质感渐变 -->
+        <linearGradient id="controller-body-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#2a3342"/>
+          <stop offset="25%" stop-color="#1e2532"/>
+          <stop offset="70%" stop-color="#151b24"/>
+          <stop offset="100%" stop-color="#0f131a"/>
         </linearGradient>
         <linearGradient id="terminal-green-grad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stop-color="#22c55e"/>
           <stop offset="100%" stop-color="#15803d"/>
         </linearGradient>
+        <!-- 磁力锁金属拉丝色 -->
+        <linearGradient id="lock-metal-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#cbd5e1"/>
+          <stop offset="30%" stop-color="#f1f5f9"/>
+          <stop offset="70%" stop-color="#e2e8f0"/>
+          <stop offset="100%" stop-color="#94a3b8"/>
+        </linearGradient>
       </defs>
 
       <!-- 画布纯白底 -->
-      <rect id="bg-rect" width="1400" height="920" fill="#ffffff"/>
+      <rect id="bg-rect" width="1600" height="1180" fill="#ffffff"/>
 
-      <!-- 顶头标题与技术说明 -->
-      <text class="editable" x="700" y="40" font-size="22" font-weight="bold" fill="#0f172a" text-anchor="middle" font-family="'PingFang SC', 'Microsoft YaHei', sans-serif">魔点 AB 门 (双门联动互锁) 接线示意图</text>
-      <text class="editable" x="700" y="65" font-size="12" fill="#64748b" text-anchor="middle">魔点 AB 门互锁控制器 ｜ 双门联动互锁标准工程接线 ｜ 门禁设备×2 · 电锁×2 · 开门按钮×2 · 12V2A电源×2 · 摄像机×1</text>
+      <!-- 顶头工程标题与副标题 -->
+      <text class="editable" x="800" y="38" font-size="22" font-weight="bold" fill="#0f172a" text-anchor="middle" font-family="'PingFang SC', 'Microsoft YaHei', sans-serif">联动门控制主机 (BJRANDE-760) 双门互锁标准接线图</text>
+      <text class="editable" x="800" y="62" font-size="12" fill="#64748b" text-anchor="middle">严格依照控制主机面板与端子实物丝印绘制 ｜ 闭门磁感应互锁 · 门禁/按钮并联触发 · 485通讯手拉手串接</text>
 
-      <!-- ==================== 1. 设备外框层 ==================== -->
+      <!-- ==================== 1. 设备外观外框层 ==================== -->
       <g id="device-boxes-group">
-        <!-- 内门侧设备 -->
-        <!-- 内门电锁 -->
-        <rect x="50" y="95" width="250" height="140" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="2" filter="url(#shadow)"/>
-        <path d="M 50 125 L 300 125" stroke="#e0f2fe" stroke-width="1"/>
-        <rect x="50" y="95" width="250" height="30" rx="8" fill="#f0f9ff"/>
-        <rect x="50" y="115" width="250" height="10" fill="#f0f9ff"/>
+        <!-- A. 顶部左侧：联动云台摄像机 -->
+        <g id="camera-device" transform="translate(100, 140)">
+          <!-- 摄像机主体外框 -->
+          <rect x="0" y="45" width="150" height="120" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" filter="url(#shadow)"/>
+          <!-- 摄像头仿真图形：球机/云台机外观 -->
+          <circle cx="75" cy="105" r="42" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+          <circle cx="75" cy="105" r="30" fill="#1e293b"/>
+          <circle cx="75" cy="105" r="14" fill="#0f172a"/>
+          <circle cx="80" cy="100" r="4" fill="#38bdf8" opacity="0.8"/>
+          <!-- 顶部 485 接线端子排 (绿底 485A / 黄底 485B) -->
+          <rect x="25" y="0" width="50" height="40" rx="3" fill="#15803d" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="50" y="20" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">485</text>
+          <text class="editable" x="50" y="34" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">A</text>
 
-        <!-- 内门开门按钮 -->
-        <rect x="50" y="265" width="250" height="85" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="2" filter="url(#shadow)"/>
-        <rect x="50" y="265" width="250" height="28" rx="8" fill="#f0fdf4"/>
-        <rect x="50" y="283" width="250" height="10" fill="#f0fdf4"/>
-
-        <!-- 内门 12V2A 电源 -->
-        <rect x="50" y="380" width="250" height="75" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="2" filter="url(#shadow)"/>
-        <rect x="50" y="380" width="250" height="26" rx="8" fill="#fef2f2"/>
-        <rect x="50" y="396" width="250" height="10" fill="#fef2f2"/>
-
-        <!-- 内门门禁设备 -->
-        <rect x="50" y="485" width="250" height="155" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2" filter="url(#shadow)"/>
-        <rect x="50" y="485" width="250" height="28" rx="8" fill="#eef2ff"/>
-        <rect x="50" y="503" width="250" height="10" fill="#eef2ff"/>
-
-        <!-- ==================== 中间：魔点 AB 门互锁控制器 (拟真机体) ==================== -->
-        <!-- 控制器主体黑色外壳 -->
-        <rect x="490" y="90" width="420" height="575" rx="12" fill="url(#controller-body-grad)" stroke="#090d14" stroke-width="3" filter="url(#controller-shadow)"/>
-        <rect x="498" y="98" width="404" height="559" rx="8" fill="none" stroke="#334155" stroke-width="1.2" stroke-dasharray="8, 4"/>
-        
-        <!-- 左侧突出绿色接线端子排 (内门锁/外门锁/照明/电源) -->
-        <!-- 内门锁端子排 (5P) -->
-        <rect x="466" y="118" width="24" height="118" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
-        <!-- 外门锁端子排 (5P) -->
-        <rect x="466" y="258" width="24" height="118" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
-        <!-- 照明端子排 (2P) -->
-        <rect x="466" y="408" width="24" height="48" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
-        <!-- 电源端子排 (2P) -->
-        <rect x="466" y="488" width="24" height="48" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
-
-        <!-- 右侧突出绿色接线端子排 (内门读卡/外门读卡/室内操作键盘) -->
-        <!-- 内门读卡端子排 (4P) -->
-        <rect x="910" y="118" width="24" height="98" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
-        <!-- 外门读卡端子排 (4P) -->
-        <rect x="910" y="248" width="24" height="98" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
-        <!-- 室内操作键盘端子排 (6P) -->
-        <rect x="910" y="378" width="24" height="148" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
-
-        <!-- 控制器内部精细组件: 喇叭蜂鸣器孔阵列 (拟真实物) -->
-        <g id="speaker-grill" transform="translate(640, 520)">
-          <!-- 八边形/同心圆微孔阵列 -->
-          <circle cx="60" cy="50" r="58" fill="#111620" stroke="#334155" stroke-width="1.5"/>
-          <!-- 孔阵 (使用循环分布的小孔) -->
-          <!-- 中心孔与同心环孔 -->
-          <circle cx="60" cy="50" r="3.2" fill="#070a0f"/>
-          <!-- 环1 r=14 -->
-          <circle cx="60" cy="36" r="2.8" fill="#070a0f"/><circle cx="60" cy="64" r="2.8" fill="#070a0f"/>
-          <circle cx="46" cy="50" r="2.8" fill="#070a0f"/><circle cx="74" cy="50" r="2.8" fill="#070a0f"/>
-          <circle cx="50" cy="40" r="2.8" fill="#070a0f"/><circle cx="70" cy="40" r="2.8" fill="#070a0f"/>
-          <circle cx="50" cy="60" r="2.8" fill="#070a0f"/><circle cx="70" cy="60" r="2.8" fill="#070a0f"/>
-          <!-- 环2 r=28 -->
-          <circle cx="60" cy="22" r="2.8" fill="#070a0f"/><circle cx="60" cy="78" r="2.8" fill="#070a0f"/>
-          <circle cx="32" cy="50" r="2.8" fill="#070a0f"/><circle cx="88" cy="50" r="2.8" fill="#070a0f"/>
-          <circle cx="40" cy="30" r="2.8" fill="#070a0f"/><circle cx="80" cy="30" r="2.8" fill="#070a0f"/>
-          <circle cx="40" cy="70" r="2.8" fill="#070a0f"/><circle cx="80" cy="70" r="2.8" fill="#070a0f"/>
-          <!-- 环3 r=42 -->
-          <circle cx="60" cy="8" r="2.8" fill="#070a0f"/><circle cx="60" cy="92" r="2.8" fill="#070a0f"/>
-          <circle cx="18" cy="50" r="2.8" fill="#070a0f"/><circle cx="102" cy="50" r="2.8" fill="#070a0f"/>
-          <circle cx="30" cy="20" r="2.8" fill="#070a0f"/><circle cx="90" cy="20" r="2.8" fill="#070a0f"/>
-          <circle cx="30" cy="80" r="2.8" fill="#070a0f"/><circle cx="90" cy="80" r="2.8" fill="#070a0f"/>
+          <rect x="75" y="0" width="50" height="40" rx="3" fill="#ca8a04" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="100" y="20" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">485</text>
+          <text class="editable" x="100" y="34" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">B</text>
+          <text class="editable" x="75" y="180" font-family="'PingFang SC', sans-serif" font-size="12" font-weight="600" fill="#475569" text-anchor="middle">联动摄像机</text>
         </g>
 
-        <!-- 拨码开关面板 (实物复刻) -->
-        <rect x="652" y="225" width="138" height="120" rx="4" fill="#131923" stroke="#475569" stroke-width="1"/>
-        <rect x="660" y="275" width="56" height="28" rx="2" fill="#991b1b" stroke="#7f1d1d" stroke-width="1"/>
-        <!-- 4位白色开关滑块 -->
-        <rect x="664" y="278" width="8" height="10" fill="#f8fafc" rx="1"/>
-        <rect x="677" y="278" width="8" height="10" fill="#f8fafc" rx="1"/>
-        <rect x="690" y="290" width="8" height="10" fill="#f8fafc" rx="1"/>
-        <rect x="703" y="290" width="8" height="10" fill="#f8fafc" rx="1"/>
+        <!-- B. 顶部中左：内门门禁设备 (左) -->
+        <g id="access-device-1" transform="translate(380, 140)">
+          <!-- 主体白框 -->
+          <rect x="0" y="45" width="130" height="155" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5" filter="url(#shadow)"/>
+          <rect x="15" y="60" width="100" height="80" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+          <text class="editable" x="65" y="105" font-family="'PingFang SC', sans-serif" font-size="13" font-weight="bold" fill="#334155" text-anchor="middle">门禁设备</text>
+          <text class="editable" x="65" y="125" font-family="'PingFang SC', sans-serif" font-size="10" fill="#64748b" text-anchor="middle">(内门通道)</text>
 
-        <!-- 音量旋钮面板 (实物复刻) -->
-        <circle cx="760" cy="405" r="18" fill="#334155" stroke="#64748b" stroke-width="1.5"/>
-        <circle cx="760" cy="405" r="14" fill="#1e293b"/>
-        <line x1="760" y1="394" x2="760" y2="400" stroke="#f8fafc" stroke-width="2"/>
-        <!-- +12V 电源指示灯/微调孔 -->
-        <circle cx="678" cy="405" r="5" fill="#22c55e" stroke="#16a34a" stroke-width="1"/>
-        <circle cx="678" cy="405" r="9" fill="none" stroke="#22c55e" stroke-width="0.8" opacity="0.6"/>
+          <!-- 顶部 485 端子排 (绿底 485A / 黄底 485B) -->
+          <rect x="15" y="0" width="50" height="40" rx="3" fill="#15803d" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="40" y="20" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">485</text>
+          <text class="editable" x="40" y="34" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">A</text>
 
-        <!-- 外门侧设备 -->
-        <!-- 外门电锁 -->
-        <rect x="1100" y="95" width="250" height="140" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="2" filter="url(#shadow)"/>
-        <rect x="1100" y="95" width="250" height="30" rx="8" fill="#f0f9ff"/>
-        <rect x="1100" y="115" width="250" height="10" fill="#f0f9ff"/>
+          <rect x="65" y="0" width="50" height="40" rx="3" fill="#ca8a04" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="90" y="20" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">485</text>
+          <text class="editable" x="90" y="34" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">B</text>
 
-        <!-- 外门开门按钮 -->
-        <rect x="1100" y="265" width="250" height="85" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="2" filter="url(#shadow)"/>
-        <rect x="1100" y="265" width="250" height="28" rx="8" fill="#f0fdf4"/>
-        <rect x="1100" y="283" width="250" height="10" fill="#f0fdf4"/>
-
-        <!-- 外门 12V2A 电源 -->
-        <rect x="1100" y="380" width="250" height="75" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="2" filter="url(#shadow)"/>
-        <rect x="1100" y="380" width="250" height="26" rx="8" fill="#fef2f2"/>
-        <rect x="1100" y="396" width="250" height="10" fill="#fef2f2"/>
-
-        <!-- 外门门禁设备 -->
-        <rect x="1100" y="485" width="250" height="155" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2" filter="url(#shadow)"/>
-        <rect x="1100" y="485" width="250" height="28" rx="8" fill="#eef2ff"/>
-        <rect x="1100" y="503" width="250" height="10" fill="#eef2ff"/>
-
-        <!-- 底部联动摄像头 -->
-        <rect x="600" y="685" width="200" height="48" rx="8" fill="#ffffff" stroke="#9333ea" stroke-width="1.8" filter="url(#shadow)"/>
-        <rect x="600" y="685" width="200" height="22" rx="8" fill="#faf5ff"/>
-        <rect x="600" y="697" width="200" height="10" fill="#faf5ff"/>
-      </g>
-
-      <!-- ==================== 2. 设备名称与丝印文字 ==================== -->
-      <g font-family="'PingFang SC', 'Microsoft YaHei', sans-serif">
-        <!-- 内门侧标题 -->
-        <text class="editable" x="175" y="116" font-size="14" font-weight="bold" fill="#0369a1" text-anchor="middle">电锁 (磁力锁) — 内门</text>
-        <text class="editable" x="175" y="284" font-size="14" font-weight="bold" fill="#15803d" text-anchor="middle">开门按钮 — 内门</text>
-        <text class="editable" x="175" y="398" font-size="13" font-weight="bold" fill="#b91c1c" text-anchor="middle">12V2A 电源适配器 — 内门</text>
-        <text class="editable" x="175" y="504" font-size="14" font-weight="bold" fill="#4338ca" text-anchor="middle">门禁设备 — 内门 (人脸/刷卡)</text>
-
-        <!-- 外门侧标题 -->
-        <text class="editable" x="1225" y="116" font-size="14" font-weight="bold" fill="#0369a1" text-anchor="middle">电锁 (磁力锁) — 外门</text>
-        <text class="editable" x="1225" y="284" font-size="14" font-weight="bold" fill="#15803d" text-anchor="middle">开门按钮 — 外门</text>
-        <text class="editable" x="1225" y="398" font-size="13" font-weight="bold" fill="#b91c1c" text-anchor="middle">12V2A 电源适配器 — 外门</text>
-        <text class="editable" x="1225" y="504" font-size="14" font-weight="bold" fill="#4338ca" text-anchor="middle">门禁设备 — 外门 (人脸/刷卡)</text>
-
-        <!-- 摄像头标题 -->
-        <text class="editable" x="700" y="702" font-size="13" font-weight="bold" fill="#7e22ce" text-anchor="middle">联动摄像机 (485抓拍联动)</text>
-
-        <!-- 魔点控制器面板印刷 (完全复刻实物) -->
-        <text class="editable" x="650" y="145" font-size="20" font-weight="bold" fill="#ffffff" letter-spacing="4">魔点AB门互锁控制器</text>
-        <text class="editable" x="650" y="168" font-size="10" fill="#94a3b8">双门状态互锁判定核心 · 硬件级互锁</text>
-
-        <!-- 控制器端子区白底框与丝印文字 (左侧端子功能) -->
-        <text class="editable" x="508" y="140" font-size="11" font-weight="bold" fill="#38bdf8">内门锁</text>
-        <text class="editable" x="508" y="280" font-size="11" font-weight="bold" fill="#38bdf8">外门锁</text>
-        <text class="editable" x="508" y="425" font-size="11" font-weight="bold" fill="#cbd5e1">照 明</text>
-        <text class="editable" x="508" y="505" font-size="11" font-weight="bold" fill="#f87171">电 源</text>
-
-        <!-- 右侧端子功能丝印 -->
-        <text class="editable" x="850" y="140" font-size="11" font-weight="bold" fill="#4ade80" text-anchor="end">内门读卡</text>
-        <text class="editable" x="850" y="270" font-size="11" font-weight="bold" fill="#4ade80" text-anchor="end">外门读卡</text>
-        <text class="editable" x="850" y="400" font-size="11" font-weight="bold" fill="#fde047" text-anchor="end">室内操作键盘</text>
-
-        <!-- 拨码丝印表格 (实物文字完全一致) -->
-        <g font-family="Consolas, monospace" font-size="9" fill="#cbd5e1">
-          <text class="editable" x="660" y="242" font-weight="bold" fill="#f8fafc">【拨码定义】 3 4 延时(S)</text>
-          <text class="editable" x="660" y="258">上 上: 3秒   下 上: 5秒</text>
-          <text class="editable" x="660" y="270">上 下: 7秒   下 下: 9秒</text>
-          <text class="editable" x="725" y="302" font-size="10" fill="#94a3b8">拨码开关</text>
+          <!-- 底部出线端子排 (4P: NO, COM, GND, 12V) -->
+          <!-- NO (蓝底) -->
+          <rect x="5" y="205" width="30" height="46" rx="2" fill="#0284c7" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="20" y="226" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">N</text>
+          <text class="editable" x="20" y="242" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">O</text>
+          <!-- COM (蓝底) -->
+          <rect x="35" y="205" width="30" height="46" rx="2" fill="#0284c7" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="50" y="220" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">C</text>
+          <text class="editable" x="50" y="233" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">O</text>
+          <text class="editable" x="50" y="246" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">M</text>
+          <!-- GND (灰底) -->
+          <rect x="65" y="205" width="30" height="46" rx="2" fill="#64748b" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="80" y="220" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">G</text>
+          <text class="editable" x="80" y="233" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">N</text>
+          <text class="editable" x="80" y="246" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">D</text>
+          <!-- 12V (灰底) -->
+          <rect x="95" y="205" width="30" height="46" rx="2" fill="#64748b" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="110" y="226" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">12</text>
+          <text class="editable" x="110" y="242" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">V</text>
         </g>
-        <!-- 音量与12V丝印 -->
-        <text class="editable" x="760" y="432" font-size="10" fill="#94a3b8" text-anchor="middle">音量</text>
-        <text class="editable" x="678" y="424" font-size="10" fill="#4ade80" text-anchor="middle">+12V</text>
+
+        <!-- C. 顶部中右：外门门禁设备 (右) -->
+        <g id="access-device-2" transform="translate(600, 140)">
+          <!-- 主体白框 -->
+          <rect x="0" y="45" width="130" height="155" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5" filter="url(#shadow)"/>
+          <rect x="15" y="60" width="100" height="80" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+          <text class="editable" x="65" y="105" font-family="'PingFang SC', sans-serif" font-size="13" font-weight="bold" fill="#334155" text-anchor="middle">门禁设备</text>
+          <text class="editable" x="65" y="125" font-family="'PingFang SC', sans-serif" font-size="10" fill="#64748b" text-anchor="middle">(外门通道)</text>
+
+          <!-- 顶部 485 端子排 -->
+          <rect x="15" y="0" width="50" height="40" rx="3" fill="#15803d" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="40" y="20" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">485</text>
+          <text class="editable" x="40" y="34" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">A</text>
+
+          <rect x="65" y="0" width="50" height="40" rx="3" fill="#ca8a04" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="90" y="20" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">485</text>
+          <text class="editable" x="90" y="34" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">B</text>
+
+          <!-- 底部出线端子排 (4P) -->
+          <rect x="5" y="205" width="30" height="46" rx="2" fill="#0284c7" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="20" y="226" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">N</text>
+          <text class="editable" x="20" y="242" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">O</text>
+
+          <rect x="35" y="205" width="30" height="46" rx="2" fill="#0284c7" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="50" y="220" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">C</text>
+          <text class="editable" x="50" y="233" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">O</text>
+          <text class="editable" x="50" y="246" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">M</text>
+
+          <rect x="65" y="205" width="30" height="46" rx="2" fill="#64748b" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="80" y="220" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">G</text>
+          <text class="editable" x="80" y="233" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">N</text>
+          <text class="editable" x="80" y="246" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">D</text>
+
+          <rect x="95" y="205" width="30" height="46" rx="2" fill="#64748b" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="110" y="226" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">12</text>
+          <text class="editable" x="110" y="242" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">V</text>
+        </g>
+
+        <!-- D. 顶部右侧：开门按钮 1 (内门出门按钮) -->
+        <g id="exit-button-1" transform="translate(890, 190)">
+          <!-- 按钮面壳 (仿真86底盒与大按键) -->
+          <rect x="0" y="36" width="70" height="70" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5" filter="url(#shadow)"/>
+          <rect x="10" y="46" width="50" height="50" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+          <text class="editable" x="35" y="66" font-size="9" fill="#64748b" text-anchor="middle">DOOR</text>
+          <circle cx="35" cy="74" r="5" fill="#22c55e" opacity="0.8"/>
+          <text class="editable" x="35" y="88" font-size="8" fill="#64748b" text-anchor="middle">EXIT</text>
+
+          <!-- 顶部端子: NO (亮绿底白字) / COM (深灰绿底白字) -->
+          <rect x="8" y="0" width="26" height="32" rx="2" fill="#22c55e" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="21" y="21" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">NO</text>
+
+          <rect x="36" y="0" width="26" height="32" rx="2" fill="#15803d" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="49" y="21" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">COM</text>
+
+          <!-- 底部标号 (黄色圆圈1) -->
+          <circle cx="35" cy="130" r="10" fill="#eab308"/>
+          <text class="editable" x="35" y="134" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">1</text>
+          <text class="editable" x="35" y="118" font-size="11" fill="#475569" text-anchor="middle">开门按钮</text>
+        </g>
+
+        <!-- E. 顶部右侧：开门按钮 2 (外门出门按钮) -->
+        <g id="exit-button-2" transform="translate(980, 190)">
+          <!-- 按钮面壳 -->
+          <rect x="0" y="36" width="70" height="70" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5" filter="url(#shadow)"/>
+          <rect x="10" y="46" width="50" height="50" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"/>
+          <text class="editable" x="35" y="66" font-size="9" fill="#64748b" text-anchor="middle">DOOR</text>
+          <circle cx="35" cy="74" r="5" fill="#22c55e" opacity="0.8"/>
+          <text class="editable" x="35" y="88" font-size="8" fill="#64748b" text-anchor="middle">EXIT</text>
+
+          <!-- 顶部端子: NO / COM -->
+          <rect x="8" y="0" width="26" height="32" rx="2" fill="#22c55e" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="21" y="21" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">NO</text>
+
+          <rect x="36" y="0" width="26" height="32" rx="2" fill="#15803d" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="49" y="21" font-family="Consolas, monospace" font-size="10" font-weight="bold" fill="#ffffff" text-anchor="middle">COM</text>
+
+          <!-- 底部标号 (黄色圆圈2) -->
+          <circle cx="35" cy="130" r="10" fill="#eab308"/>
+          <text class="editable" x="35" y="134" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">2</text>
+          <text class="editable" x="35" y="118" font-size="11" fill="#475569" text-anchor="middle">开门按钮</text>
+        </g>
+
+        <!-- F. 中左侧独立电源适配器 1 & 2 (为两个门禁设备供电) -->
+        <g id="power-supplies" transform="translate(100, 360)">
+          <!-- 12V2A电源适配器 1 (给内门门禁) -->
+          <rect x="0" y="0" width="125" height="55" rx="5" fill="#ffffff" stroke="#64748b" stroke-width="1.2" filter="url(#shadow)"/>
+          <text class="editable" x="62" y="26" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">12V2A电源适配器</text>
+          <text class="editable" x="62" y="44" font-size="10" fill="#64748b" text-anchor="middle">(给内门门禁)</text>
+
+          <!-- 12V2A电源适配器 2 (给外门门禁) -->
+          <rect x="0" y="85" width="125" height="55" rx="5" fill="#ffffff" stroke="#64748b" stroke-width="1.2" filter="url(#shadow)"/>
+          <text class="editable" x="62" y="111" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">12V2A电源适配器</text>
+          <text class="editable" x="62" y="129" font-size="10" fill="#64748b" text-anchor="middle">(给外门门禁)</text>
+        </g>
+
+        <!-- ==================== G. 核心主角：联动门控制主机 (BJRANDE-760) ==================== -->
+        <!-- 控制器横向放置，完全仿真图片真实外观与丝印排布 -->
+        <g id="interlock-controller-main" transform="translate(430, 480)">
+          <!-- 黑色工业机壳 -->
+          <rect x="0" y="0" width="820" height="260" rx="10" fill="url(#controller-body-grad)" stroke="#090d14" stroke-width="3" filter="url(#controller-shadow)"/>
+          <!-- 内部磨砂轮廓浅边框 -->
+          <rect x="6" y="6" width="808" height="248" rx="6" fill="none" stroke="#334155" stroke-width="1.2" stroke-dasharray="8, 4"/>
+
+          <!-- ---------------- 上排绿色插拔端子座 ---------------- -->
+          <!-- 1. 【内门读卡】端子排 (4P) x: 20 ~ 116 (每个宽24) -->
+          <rect x="20" y="-22" width="96" height="22" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
+          <line x1="44" y1="-22" x2="44" y2="0" stroke="#0f172a" stroke-width="1"/>
+          <line x1="68" y1="-22" x2="68" y2="0" stroke="#0f172a" stroke-width="1"/>
+          <line x1="92" y1="-22" x2="92" y2="0" stroke="#0f172a" stroke-width="1"/>
+
+          <!-- 2. 【外门读卡】端子排 (4P) x: 130 ~ 226 -->
+          <rect x="130" y="-22" width="96" height="22" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
+          <line x1="154" y1="-22" x2="154" y2="0" stroke="#0f172a" stroke-width="1"/>
+          <line x1="178" y1="-22" x2="178" y2="0" stroke="#0f172a" stroke-width="1"/>
+          <line x1="202" y1="-22" x2="202" y2="0" stroke="#0f172a" stroke-width="1"/>
+
+          <!-- 3. 【室内操作键盘】端子排 (6P) x: 240 ~ 384 -->
+          <rect x="240" y="-22" width="144" height="22" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
+          <line x1="264" y1="-22" x2="264" y2="0" stroke="#0f172a" stroke-width="1"/>
+          <line x1="288" y1="-22" x2="288" y2="0" stroke="#0f172a" stroke-width="1"/>
+          <line x1="312" y1="-22" x2="312" y2="0" stroke="#0f172a" stroke-width="1"/>
+          <line x1="336" y1="-22" x2="336" y2="0" stroke="#0f172a" stroke-width="1"/>
+          <line x1="360" y1="-22" x2="360" y2="0" stroke="#0f172a" stroke-width="1"/>
+
+          <!-- ---------------- 下排绿色插拔端子座 ---------------- -->
+          <!-- 1. 【内门锁】端子排 (5P) x: 20 ~ 140 -->
+          <rect x="20" y="260" width="120" height="22" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
+          <line x1="44" y1="260" x2="44" y2="282" stroke="#0f172a" stroke-width="1"/>
+          <line x1="68" y1="260" x2="68" y2="282" stroke="#0f172a" stroke-width="1"/>
+          <line x1="92" y1="260" x2="92" y2="282" stroke="#0f172a" stroke-width="1"/>
+          <line x1="116" y1="260" x2="116" y2="282" stroke="#0f172a" stroke-width="1"/>
+
+          <!-- 2. 【外门锁】端子排 (5P) x: 154 ~ 274 -->
+          <rect x="154" y="260" width="120" height="22" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
+          <line x1="178" y1="260" x2="178" y2="282" stroke="#0f172a" stroke-width="1"/>
+          <line x1="202" y1="260" x2="202" y2="282" stroke="#0f172a" stroke-width="1"/>
+          <line x1="226" y1="260" x2="226" y2="282" stroke="#0f172a" stroke-width="1"/>
+          <line x1="250" y1="260" x2="250" y2="282" stroke="#0f172a" stroke-width="1"/>
+
+          <!-- 3. 【照明电源】端子排 (4P) x: 288 ~ 384 -->
+          <rect x="288" y="260" width="96" height="22" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
+          <line x1="312" y1="260" x2="312" y2="282" stroke="#0f172a" stroke-width="1"/>
+          <line x1="336" y1="260" x2="336" y2="282" stroke="#0f172a" stroke-width="1"/>
+          <line x1="360" y1="260" x2="360" y2="282" stroke="#0f172a" stroke-width="1"/>
+
+          <!-- 4. +12V 电源微调/指示孔 (右侧 x: 410, y: 270) -->
+          <circle cx="410" cy="270" r="10" fill="#1e293b" stroke="#475569" stroke-width="1.5"/>
+          <circle cx="410" cy="270" r="6" fill="#22c55e"/>
+
+          <!-- ---------------- 控制器面板文字与丝印 ---------------- -->
+          <!-- 中部醒目标题文字 (实物白字) -->
+          <text class="editable" x="220" y="115" font-family="'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="24" font-weight="bold" fill="#ffffff" letter-spacing="2">联动门控制主机</text>
+          <text class="editable" x="220" y="142" font-family="Consolas, monospace" font-size="16" font-weight="bold" fill="#cbd5e1" letter-spacing="1">BJRANDE-760</text>
+
+          <!-- 右侧：圆形喇叭微孔阵列 (拟真实物) -->
+          <g id="speaker-dots" transform="translate(620, 130)">
+            <circle cx="0" cy="0" r="85" fill="#151b24" stroke="#334155" stroke-width="1.5"/>
+            <!-- 规则多层圆环小孔阵列 -->
+            <circle cx="0" cy="0" r="4" fill="#080c10"/>
+            <!-- 环1 r=16 -->
+            <circle cx="0" cy="-16" r="3.2" fill="#080c10"/><circle cx="16" cy="0" r="3.2" fill="#080c10"/><circle cx="0" cy="16" r="3.2" fill="#080c10"/><circle cx="-16" cy="0" r="3.2" fill="#080c10"/>
+            <circle cx="11" cy="-11" r="3.2" fill="#080c10"/><circle cx="11" cy="11" r="3.2" fill="#080c10"/><circle cx="-11" cy="11" r="3.2" fill="#080c10"/><circle cx="-11" cy="-11" r="3.2" fill="#080c10"/>
+            <!-- 环2 r=32 -->
+            <circle cx="0" cy="-32" r="3.2" fill="#080c10"/><circle cx="32" cy="0" r="3.2" fill="#080c10"/><circle cx="0" cy="32" r="3.2" fill="#080c10"/><circle cx="-32" cy="0" r="3.2" fill="#080c10"/>
+            <circle cx="23" cy="-23" r="3.2" fill="#080c10"/><circle cx="23" cy="23" r="3.2" fill="#080c10"/><circle cx="-23" cy="23" r="3.2" fill="#080c10"/><circle cx="-23" cy="-23" r="3.2" fill="#080c10"/>
+            <!-- 环3 r=48 -->
+            <circle cx="0" cy="-48" r="3.2" fill="#080c10"/><circle cx="48" cy="0" r="3.2" fill="#080c10"/><circle cx="0" cy="48" r="3.2" fill="#080c10"/><circle cx="-48" cy="0" r="3.2" fill="#080c10"/>
+            <circle cx="34" cy="-34" r="3.2" fill="#080c10"/><circle cx="34" cy="34" r="3.2" fill="#080c10"/><circle cx="-34" cy="34" r="3.2" fill="#080c10"/><circle cx="-34" cy="-34" r="3.2" fill="#080c10"/>
+            <!-- 环4 r=64 -->
+            <circle cx="0" cy="-64" r="3.2" fill="#080c10"/><circle cx="64" cy="0" r="3.2" fill="#080c10"/><circle cx="0" cy="64" r="3.2" fill="#080c10"/><circle cx="-64" cy="0" r="3.2" fill="#080c10"/>
+            <circle cx="45" cy="-45" r="3.2" fill="#080c10"/><circle cx="45" cy="45" r="3.2" fill="#080c10"/><circle cx="-45" cy="45" r="3.2" fill="#080c10"/><circle cx="-45" cy="-45" r="3.2" fill="#080c10"/>
+          </g>
+
+          <!-- ---------------- 上侧端口丝印文字 ---------------- -->
+          <!-- 白底黑字功能大标签 (贴近端子) -->
+          <rect x="20" y="8" width="96" height="24" fill="#ffffff" rx="2"/>
+          <text class="editable" x="68" y="24" font-family="'PingFang SC', sans-serif" font-size="12" font-weight="bold" fill="#0f172a" text-anchor="middle">内门读卡</text>
+
+          <rect x="130" y="8" width="96" height="24" fill="#ffffff" rx="2"/>
+          <text class="editable" x="178" y="24" font-family="'PingFang SC', sans-serif" font-size="12" font-weight="bold" fill="#0f172a" text-anchor="middle">外门读卡</text>
+
+          <rect x="240" y="8" width="144" height="24" fill="#ffffff" rx="2"/>
+          <text class="editable" x="312" y="24" font-family="'PingFang SC', sans-serif" font-size="12" font-weight="bold" fill="#0f172a" text-anchor="middle">室内操作键盘</text>
+
+          <!-- 拨码开关 & 音量 (实物白底标签) -->
+          <rect x="394" y="8" width="36" height="42" fill="#ffffff" rx="2"/>
+          <text class="editable" x="412" y="24" font-family="'PingFang SC', sans-serif" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">开关</text>
+          <text class="editable" x="412" y="42" font-family="'PingFang SC', sans-serif" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">拨码</text>
+
+          <rect x="438" y="8" width="30" height="42" fill="#ffffff" rx="2"/>
+          <text class="editable" x="453" y="24" font-family="'PingFang SC', sans-serif" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">音</text>
+          <text class="editable" x="453" y="42" font-family="'PingFang SC', sans-serif" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">量</text>
+
+          <!-- 上侧每个端子脚精确丝印 (纵向或竖写，如实物) -->
+          <!-- 内门读卡 4P (从左至右: 按钮, TM卡, GND, +12V) -->
+          <g font-family="'PingFang SC', Consolas, sans-serif" font-size="10" fill="#94a3b8" text-anchor="middle">
+            <text class="editable" x="32" y="45" font-weight="bold" fill="#ffffff">按</text>
+            <text class="editable" x="32" y="57" font-weight="bold" fill="#ffffff">钮</text>
+
+            <text class="editable" x="56" y="45">TM</text>
+            <text class="editable" x="56" y="57">卡</text>
+
+            <text class="editable" x="80" y="50" font-weight="bold" fill="#ffffff">GND</text>
+
+            <text class="editable" x="104" y="50">+12V</text>
+
+            <!-- 外门读卡 4P (从左至右: 按钮, TM卡, GND, +12V) -->
+            <text class="editable" x="142" y="45" font-weight="bold" fill="#ffffff">按</text>
+            <text class="editable" x="142" y="57" font-weight="bold" fill="#ffffff">钮</text>
+
+            <text class="editable" x="166" y="45">TM</text>
+            <text class="editable" x="166" y="57">卡</text>
+
+            <text class="editable" x="190" y="50" font-weight="bold" fill="#ffffff">GND</text>
+
+            <text class="editable" x="214" y="50">+12V</text>
+
+            <!-- 室内操作键盘 6P (外开, 内开, 全开, 全锁, 复位, GND) -->
+            <text class="editable" x="252" y="45">外</text><text class="editable" x="252" y="57">开</text>
+            <text class="editable" x="276" y="45">内</text><text class="editable" x="276" y="57">开</text>
+            <text class="editable" x="300" y="45">全</text><text class="editable" x="300" y="57">开</text>
+            <text class="editable" x="324" y="45">全</text><text class="editable" x="324" y="57">锁</text>
+            <text class="editable" x="348" y="45">复</text><text class="editable" x="348" y="57">位</text>
+            <text class="editable" x="372" y="50">GND</text>
+          </g>
+
+          <!-- ---------------- 下侧端口丝印文字 ---------------- -->
+          <!-- 白底黑字功能大标签 -->
+          <rect x="20" y="165" width="120" height="24" fill="#ffffff" rx="2"/>
+          <text class="editable" x="80" y="181" font-family="'PingFang SC', sans-serif" font-size="13" font-weight="bold" fill="#0f172a" text-anchor="middle">内门锁</text>
+
+          <rect x="154" y="165" width="120" height="24" fill="#ffffff" rx="2"/>
+          <text class="editable" x="214" y="181" font-family="'PingFang SC', sans-serif" font-size="13" font-weight="bold" fill="#0f172a" text-anchor="middle">外门锁</text>
+
+          <rect x="288" y="165" width="48" height="24" fill="#ffffff" rx="2"/>
+          <text class="editable" x="312" y="181" font-family="'PingFang SC', sans-serif" font-size="12" font-weight="bold" fill="#0f172a" text-anchor="middle">照明</text>
+
+          <rect x="336" y="165" width="48" height="24" fill="#ffffff" rx="2"/>
+          <text class="editable" x="360" y="181" font-family="'PingFang SC', sans-serif" font-size="12" font-weight="bold" fill="#0f172a" text-anchor="middle">电源</text>
+
+          <text class="editable" x="410" y="250" font-family="Consolas, monospace" font-size="13" font-weight="bold" fill="#22c55e" text-anchor="middle">+12V</text>
+
+          <!-- 下侧每个端子脚精确丝印 (如实物排列) -->
+          <!-- 内门锁 5P (从左至右: GND, 门磁(M+), 闭锁(S+), GND, 开锁(L+)) -->
+          <g font-family="'PingFang SC', Consolas, sans-serif" font-size="10" fill="#94a3b8" text-anchor="middle">
+            <text class="editable" x="32" y="210" font-weight="bold" fill="#ffffff">GND</text>
+
+            <text class="editable" x="56" y="202" font-weight="bold" fill="#38bdf8">门磁</text>
+            <text class="editable" x="56" y="214" font-weight="bold" fill="#38bdf8">M+</text>
+
+            <text class="editable" x="80" y="202">闭锁</text>
+            <text class="editable" x="80" y="214">S+</text>
+
+            <text class="editable" x="104" y="210" font-weight="bold" fill="#ffffff">GND</text>
+
+            <text class="editable" x="128" y="202" font-weight="bold" fill="#ffffff">开锁</text>
+            <text class="editable" x="128" y="214" font-weight="bold" fill="#ffffff">L+</text>
+
+            <!-- 外门锁 5P (从左至右: GND, 门磁(M+), 闭锁(S+), GND, 开锁(L+)) -->
+            <text class="editable" x="166" y="210" font-weight="bold" fill="#ffffff">GND</text>
+
+            <text class="editable" x="190" y="202" font-weight="bold" fill="#38bdf8">门磁</text>
+            <text class="editable" x="190" y="214" font-weight="bold" fill="#38bdf8">M+</text>
+
+            <text class="editable" x="214" y="202">闭锁</text>
+            <text class="editable" x="214" y="214">S+</text>
+
+            <text class="editable" x="238" y="210" font-weight="bold" fill="#ffffff">GND</text>
+
+            <text class="editable" x="262" y="202" font-weight="bold" fill="#ffffff">开锁</text>
+            <text class="editable" x="262" y="214" font-weight="bold" fill="#ffffff">L+</text>
+
+            <!-- 照明电源 4P (+, -, -, +) -->
+            <text class="editable" x="300" y="210" font-size="14" font-weight="bold" fill="#ffffff">+</text>
+            <text class="editable" x="324" y="210" font-size="14" font-weight="bold" fill="#ffffff">-</text>
+            <text class="editable" x="348" y="210" font-size="14" font-weight="bold" fill="#ffffff">-</text>
+            <text class="editable" x="372" y="210" font-size="14" font-weight="bold" fill="#f87171">+</text>
+          </g>
+        </g>
+
+        <!-- H. 底部左侧：内门磁力锁 -->
+        <g id="maglock-1" transform="translate(420, 890)">
+          <!-- 锁体金属外形 -->
+          <rect x="0" y="45" width="230" height="60" rx="4" fill="url(#lock-metal-grad)" stroke="#64748b" stroke-width="1.5" filter="url(#shadow)"/>
+          <rect x="25" y="58" width="180" height="34" rx="2" fill="#334155" stroke="#1e293b" stroke-width="1"/>
+          <circle cx="115" cy="75" r="5" fill="#f8fafc"/>
+          <text class="editable" x="115" y="130" font-family="'PingFang SC', sans-serif" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="middle">磁力锁 (内门)</text>
+
+          <!-- 顶部接线端子排 (5P，从左至右: NO, COM, NC, 12V-, 12V+) -->
+          <!-- NO (蓝底白字) -->
+          <rect x="20" y="0" width="36" height="42" rx="2" fill="#0284c7" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="38" y="26" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">NO</text>
+          <!-- COM (绿底白字) -->
+          <rect x="58" y="0" width="36" height="42" rx="2" fill="#15803d" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="76" y="26" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">COM</text>
+          <!-- NC (蓝底白字) -->
+          <rect x="96" y="0" width="36" height="42" rx="2" fill="#0284c7" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="114" y="26" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">NC</text>
+          <!-- 12V- (深灰底白字) -->
+          <rect x="134" y="0" width="38" height="42" rx="2" fill="#475569" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="153" y="26" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">12V-</text>
+          <!-- 12V+ (红底白字) -->
+          <rect x="174" y="0" width="38" height="42" rx="2" fill="#dc2626" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="193" y="26" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">12V+</text>
+        </g>
+
+        <!-- I. 底部右侧：外门磁力锁 -->
+        <g id="maglock-2" transform="translate(730, 890)">
+          <!-- 锁体金属外形 -->
+          <rect x="0" y="45" width="230" height="60" rx="4" fill="url(#lock-metal-grad)" stroke="#64748b" stroke-width="1.5" filter="url(#shadow)"/>
+          <rect x="25" y="58" width="180" height="34" rx="2" fill="#334155" stroke="#1e293b" stroke-width="1"/>
+          <circle cx="115" cy="75" r="5" fill="#f8fafc"/>
+          <text class="editable" x="115" y="130" font-family="'PingFang SC', sans-serif" font-size="14" font-weight="bold" fill="#0f172a" text-anchor="middle">磁力锁 (外门)</text>
+
+          <!-- 顶部接线端子排 (5P，从左至右: NO, COM, NC, 12V-, 12V+) -->
+          <rect x="20" y="0" width="36" height="42" rx="2" fill="#0284c7" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="38" y="26" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">NO</text>
+
+          <rect x="58" y="0" width="36" height="42" rx="2" fill="#15803d" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="76" y="26" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">COM</text>
+
+          <rect x="96" y="0" width="36" height="42" rx="2" fill="#0284c7" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="114" y="26" font-family="Consolas, monospace" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">NC</text>
+
+          <rect x="134" y="0" width="38" height="42" rx="2" fill="#475569" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="153" y="26" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">12V-</text>
+
+          <rect x="174" y="0" width="38" height="42" rx="2" fill="#dc2626" stroke="#0f172a" stroke-width="1.2"/>
+          <text class="editable" x="193" y="26" font-family="Consolas, monospace" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">12V+</text>
+        </g>
+
+        <!-- J. 右下角：控制器主机专用电源适配器 -->
+        <g id="host-power-adapter" transform="translate(1220, 890)">
+          <rect x="0" y="0" width="160" height="75" rx="6" fill="#ffffff" stroke="#64748b" stroke-width="1.5" filter="url(#shadow)"/>
+          <text class="editable" x="80" y="38" font-size="13" font-weight="bold" fill="#0f172a" text-anchor="middle">电源适配器</text>
+          <text class="editable" x="80" y="58" font-size="11" fill="#64748b" text-anchor="middle">(主机 12V 供电)</text>
+        </g>
       </g>
 
-      <!-- ==================== 3. 详细端子标签文字 ==================== -->
-      <g font-family="Consolas, monospace" font-size="11">
-        <!-- 内门电锁端子 (右对齐，靠近出线口 x=300) -->
-        <text class="editable" x="290" y="134" text-anchor="end" fill="#0369a1" font-weight="600">12V+</text>
-        <text class="editable" x="290" y="159" text-anchor="end" fill="#475569" font-weight="600">12V-</text>
-        <text class="editable" x="290" y="184" text-anchor="end" fill="#0284c7" font-weight="600">COM (门磁)</text>
-        <text class="editable" x="290" y="209" text-anchor="end" fill="#0284c7" font-weight="600">NO  (门磁)</text>
-
-        <!-- 外门电锁端子 (左对齐，靠近出线口 x=1100) -->
-        <text class="editable" x="1110" y="134" fill="#0369a1" font-weight="600">12V+</text>
-        <text class="editable" x="1110" y="159" fill="#475569" font-weight="600">12V-</text>
-        <text class="editable" x="1110" y="184" fill="#0284c7" font-weight="600">COM (门磁)</text>
-        <text class="editable" x="1110" y="209" fill="#0284c7" font-weight="600">NO  (门磁)</text>
-
-        <!-- 开门按钮端子 -->
-        <text class="editable" x="290" y="304" text-anchor="end" fill="#475569" font-weight="600">COM</text>
-        <text class="editable" x="290" y="329" text-anchor="end" fill="#15803d" font-weight="600">NO</text>
-        <text class="editable" x="1110" y="304" fill="#475569" font-weight="600">COM</text>
-        <text class="editable" x="1110" y="329" fill="#15803d" font-weight="600">NO</text>
-
-        <!-- 电源适配器端子 -->
-        <text class="editable" x="100" y="432" fill="#dc2626" font-weight="bold">+12V</text>
-        <text class="editable" x="240" y="432" fill="#475569" font-weight="bold">GND</text>
-        <text class="editable" x="1150" y="432" fill="#dc2626" font-weight="bold">+12V</text>
-        <text class="editable" x="1290" y="432" fill="#475569" font-weight="bold">GND</text>
-
-        <!-- 门禁设备端子 -->
-        <text class="editable" x="100" y="535" fill="#dc2626" font-weight="bold">+12V</text>
-        <text class="editable" x="240" y="535" fill="#475569" font-weight="bold">GND</text>
-        <text class="editable" x="290" y="570" text-anchor="end" fill="#475569" font-weight="600">COM (继电器)</text>
-        <text class="editable" x="290" y="600" text-anchor="end" fill="#15803d" font-weight="600">NO  (继电器)</text>
-        <text class="editable" x="110" y="625" fill="#f97316" font-weight="bold">485A</text>
-        <text class="editable" x="190" y="625" fill="#9333ea" font-weight="bold">485B</text>
-
-        <text class="editable" x="1150" y="535" fill="#dc2626" font-weight="bold">+12V</text>
-        <text class="editable" x="1290" y="535" fill="#475569" font-weight="bold">GND</text>
-        <text class="editable" x="1110" y="570" fill="#475569" font-weight="600">COM (继电器)</text>
-        <text class="editable" x="1110" y="600" fill="#15803d" font-weight="600">NO  (继电器)</text>
-        <text class="editable" x="1210" y="625" fill="#f97316" font-weight="bold">485A</text>
-        <text class="editable" x="1290" y="625" fill="#9333ea" font-weight="bold">485B</text>
-
-        <!-- 摄像头端子 -->
-        <text class="editable" x="650" y="722" fill="#f97316" font-weight="bold">485A</text>
-        <text class="editable" x="740" y="722" fill="#9333ea" font-weight="bold">485B</text>
-
-        <!-- 控制器左侧实物端子丝印标注 (靠近端子块) -->
-        <!-- 内门锁 5P: GND, 门磁(M+), 闭锁(S+), GND, 开锁(L+) -->
-        <text class="editable" x="495" y="133" fill="#ffffff" font-size="10">开锁 (L+)</text>
-        <text class="editable" x="495" y="157" fill="#94a3b8" font-size="10">GND</text>
-        <text class="editable" x="495" y="181" fill="#94a3b8" font-size="10">闭锁 (S+)</text>
-        <text class="editable" x="495" y="205" fill="#38bdf8" font-size="10">门磁 (M+)</text>
-        <text class="editable" x="495" y="229" fill="#94a3b8" font-size="10">GND</text>
-
-        <!-- 外门锁 5P -->
-        <text class="editable" x="495" y="273" fill="#ffffff" font-size="10">开锁 (L+)</text>
-        <text class="editable" x="495" y="297" fill="#94a3b8" font-size="10">GND</text>
-        <text class="editable" x="495" y="321" fill="#94a3b8" font-size="10">闭锁 (S+)</text>
-        <text class="editable" x="495" y="345" fill="#38bdf8" font-size="10">门磁 (M+)</text>
-        <text class="editable" x="495" y="369" fill="#94a3b8" font-size="10">GND</text>
-
-        <!-- 照明 2P -->
-        <text class="editable" x="495" y="423" fill="#ffffff" font-size="10">+</text>
-        <text class="editable" x="495" y="447" fill="#94a3b8" font-size="10">-</text>
-
-        <!-- 电源 2P -->
-        <text class="editable" x="495" y="503" fill="#94a3b8" font-size="10">- (GND)</text>
-        <text class="editable" x="495" y="527" fill="#f87171" font-size="10">+ (+12V)</text>
-
-        <!-- 控制器右侧实物端子丝印标注 -->
-        <!-- 内门读卡 4P: +12V, GND, TM卡, 按钮 -->
-        <text class="editable" x="905" y="133" fill="#f87171" font-size="10" text-anchor="end">+12V</text>
-        <text class="editable" x="905" y="157" fill="#94a3b8" font-size="10" text-anchor="end">GND (公共)</text>
-        <text class="editable" x="905" y="181" fill="#94a3b8" font-size="10" text-anchor="end">TM 卡</text>
-        <text class="editable" x="905" y="205" fill="#4ade80" font-size="10" text-anchor="end">按 钮 (信号)</text>
-
-        <!-- 外门读卡 4P -->
-        <text class="editable" x="905" y="263" fill="#f87171" font-size="10" text-anchor="end">+12V</text>
-        <text class="editable" x="905" y="287" fill="#94a3b8" font-size="10" text-anchor="end">GND (公共)</text>
-        <text class="editable" x="905" y="311" fill="#94a3b8" font-size="10" text-anchor="end">TM 卡</text>
-        <text class="editable" x="905" y="335" fill="#4ade80" font-size="10" text-anchor="end">按 钮 (信号)</text>
-
-        <!-- 室内操作键盘 6P -->
-        <text class="editable" x="905" y="393" fill="#e2e8f0" font-size="10" text-anchor="end">外 开</text>
-        <text class="editable" x="905" y="417" fill="#e2e8f0" font-size="10" text-anchor="end">内 开</text>
-        <text class="editable" x="905" y="441" fill="#e2e8f0" font-size="10" text-anchor="end">全 开</text>
-        <text class="editable" x="905" y="465" fill="#e2e8f0" font-size="10" text-anchor="end">全 锁</text>
-        <text class="editable" x="905" y="489" fill="#e2e8f0" font-size="10" text-anchor="end">复 位</text>
-        <text class="editable" x="905" y="513" fill="#94a3b8" font-size="10" text-anchor="end">GND</text>
-      </g>
-
-      <!-- ==================== 4. 规范预设导线层 ==================== -->
+      <!-- ==================== 2. 精确导线接线层 (严格按图片丝印) ==================== -->
       <g id="preset-wires-group" stroke-linecap="round" stroke-linejoin="round">
-        <!-- ---------------- A. 内门锁控与门磁回路 (蓝色) ---------------- -->
-        <!-- 开锁 L+ (466, 130) -> 内门电锁 12V+ (300, 130) -->
-        <path d="M 466 130 L 300 130" stroke="#0284c7" stroke-width="2.2" fill="none"/>
-        <!-- GND (466, 155) -> 内门电锁 12V- (300, 155) -->
-        <path d="M 466 155 L 300 155" stroke="#475569" stroke-width="2.2" fill="none"/>
-        <!-- 门磁 M+ (466, 205) -> 内门电锁 COM (300, 180) -->
-        <path d="M 466 205 L 380 205 L 380 180 L 300 180" stroke="#0284c7" stroke-width="2" stroke-dasharray="4, 3" fill="none"/>
-        <!-- GND (466, 230) -> 内门电锁 NO (300, 205) -->
-        <path d="M 466 230 L 360 230 L 360 205 L 300 205" stroke="#475569" stroke-width="2" stroke-dasharray="4, 3" fill="none"/>
+        <!-- ---------------- ① RS-485 联动总线 (顶部横贯) ---------------- -->
+        <!-- 485 A (红线 #dc2626): 摄像机 A (150, 140) ── 内门门禁 A (420, 140) ── 外门门禁 A (640, 140) -->
+        <path d="M 150 140 L 150 100 L 420 100 L 420 140" stroke="#dc2626" stroke-width="2.4" fill="none"/>
+        <path d="M 420 100 L 640 100 L 640 140" stroke="#dc2626" stroke-width="2.4" fill="none"/>
 
-        <!-- ---------------- B. 外门锁控与门磁回路 (蓝色走线引导) ---------------- -->
-        <!-- 控制器外门锁 L+ (466, 270) -> 绕下过道 -> 外门电锁 12V+ (1100, 130) -->
-        <path d="M 466 270 L 440 270 L 440 80 L 1060 80 L 1060 130 L 1100 130" stroke="#0284c7" stroke-width="2.2" fill="none"/>
-        <!-- 外门锁 GND (466, 295) -> 外门电锁 12V- (1100, 155) -->
-        <path d="M 466 295 L 430 295 L 430 70 L 1070 70 L 1070 155 L 1100 155" stroke="#475569" stroke-width="2.2" fill="none"/>
-        <!-- 外门门磁 M+ (466, 345) -> 外门电锁 COM (1100, 180) -->
-        <path d="M 466 345 L 420 345 L 420 60 L 1080 60 L 1080 180 L 1100 180" stroke="#0284c7" stroke-width="2" stroke-dasharray="4, 3" fill="none"/>
-        <!-- 外门门磁 GND (466, 370) -> 外门电锁 NO (1100, 205) -->
-        <path d="M 466 370 L 410 370 L 410 50 L 1090 50 L 1090 205 L 1100 205" stroke="#475569" stroke-width="2" stroke-dasharray="4, 3" fill="none"/>
+        <!-- 485 B (黑线 #0f172a): 摄像机 B (200, 140) ── 内门门禁 B (470, 140) ── 外门门禁 B (690, 140) -->
+        <path d="M 200 140 L 200 80 L 470 80 L 470 140" stroke="#0f172a" stroke-width="2.4" fill="none"/>
+        <path d="M 470 80 L 690 80 L 690 140" stroke="#0f172a" stroke-width="2.4" fill="none"/>
 
-        <!-- ---------------- C. 内门开门触发回路 (绿色 #16a34a) ---------------- -->
-        <!-- 内门按钮 NO (300, 325) -> 控制器内门读卡【按钮】(934, 205) -->
-        <path d="M 300 325 L 410 325 L 410 360 L 790 360 L 790 205 L 934 205" stroke="#16a34a" stroke-width="2.2" fill="none"/>
-        <!-- 门禁设备继电器 NO (300, 600) 并联接入内门开门信号线 (X=410, Y=360) -->
-        <path d="M 300 600 L 410 600 L 410 360" stroke="#16a34a" stroke-width="2.2" fill="none"/>
+        <!-- ---------------- ② 门禁设备 12V 供电回路 ---------------- -->
+        <!-- 电源适配器 1 -> 内门门禁 12V & GND -->
+        <path d="M 225 385 L 340 385 L 340 405 L 490 405 L 490 391" stroke="#dc2626" stroke-width="2.2" fill="none"/> <!-- 12V 红 -->
+        <path d="M 225 395 L 320 395 L 320 415 L 460 415 L 460 391" stroke="#64748b" stroke-width="2.2" fill="none"/> <!-- GND 灰 -->
 
-        <!-- ---------------- D. 内门公共地 GND 信号回路 (深灰色 #475569) ---------------- -->
-        <!-- 内门按钮 COM (300, 300) -> 控制器内门读卡【GND】(934, 155) -->
-        <path d="M 300 300 L 400 300 L 400 350 L 800 350 L 800 155 L 934 155" stroke="#475569" stroke-width="2" fill="none"/>
-        <!-- 门禁设备 COM (300, 570) 并联接入 (X=400, Y=350) -->
-        <path d="M 300 570 L 400 570 L 400 350" stroke="#475569" stroke-width="2" fill="none"/>
+        <!-- 电源适配器 2 -> 外门门禁 12V & GND -->
+        <path d="M 225 470 L 330 470 L 330 425 L 710 425 L 710 391" stroke="#dc2626" stroke-width="2.2" fill="none"/> <!-- 12V 红 -->
+        <path d="M 225 480 L 310 480 L 310 435 L 680 435 L 680 391" stroke="#64748b" stroke-width="2.2" fill="none"/> <!-- GND 灰 -->
 
-        <!-- ---------------- E. 外门开门触发回路 (绿色 #16a34a) ---------------- -->
-        <!-- 外门按钮 NO (1100, 325) -> 控制器外门读卡【按钮】(934, 335) -->
-        <path d="M 1100 325 L 1020 325 L 1020 335 L 934 335" stroke="#16a34a" stroke-width="2.2" fill="none"/>
-        <!-- 外门门禁设备 NO (1100, 600) 并联接入 (X=1020, Y=335) -->
-        <path d="M 1100 600 L 1020 600 L 1020 335" stroke="#16a34a" stroke-width="2.2" fill="none"/>
+        <!-- ---------------- ③ 门禁开门信号接入主机读卡端口 ---------------- -->
+        <!-- 内门门禁 NO (400, 391) -> 主机【内门读卡】按钮端子 (462, 458) -->
+        <path d="M 400 391 L 400 440 L 462 440 L 462 458" stroke="#16a34a" stroke-width="2.4" fill="none"/>
+        <!-- 内门门禁 COM (430, 391) -> 主机【内门读卡】GND 端子 (510, 458) -->
+        <path d="M 430 391 L 430 430 L 510 430 L 510 458" stroke="#64748b" stroke-width="2.4" fill="none"/>
 
-        <!-- ---------------- F. 外门公共地 GND 信号回路 (深灰色 #475569) ---------------- -->
-        <!-- 外门按钮 COM (1100, 300) -> 控制器外门读卡【GND】(934, 287) -->
-        <path d="M 1100 300 L 1030 300 L 1030 287 L 934 287" stroke="#475569" stroke-width="2" fill="none"/>
-        <!-- 外门门禁设备 COM (1100, 570) 并联接入 (X=1030, Y=287) -->
-        <path d="M 1100 570 L 1030 570 L 1030 287" stroke="#475569" stroke-width="2" fill="none"/>
+        <!-- 外门门禁 NO (620, 391) -> 主机【外门读卡】按钮端子 (572, 458) -->
+        <path d="M 620 391 L 620 440 L 572 440 L 572 458" stroke="#16a34a" stroke-width="2.4" fill="none"/>
+        <!-- 外门门禁 COM (650, 391) -> 主机【外门读卡】GND 端子 (620, 458) -->
+        <path d="M 650 391 L 650 430 L 620 430 L 620 458" stroke="#64748b" stroke-width="2.4" fill="none"/>
 
-        <!-- ---------------- G. 门禁独立供电与共地 (红色 #dc2626 & 灰色) ---------------- -->
-        <!-- 内门适配器 +12V (100, 435) -> 门禁 +12V (100, 520) -->
-        <path d="M 100 435 L 100 520" stroke="#dc2626" stroke-width="2.5" fill="none"/>
-        <!-- 内门适配器 GND (240, 435) -> 门禁 GND (240, 520) -->
-        <path d="M 240 435 L 240 520" stroke="#475569" stroke-width="2.5" fill="none"/>
+        <!-- ---------------- ④ 开门按钮 1 & 2 接入主机读卡端口 ---------------- -->
+        <!-- 按钮 1 NO (911, 190) -> 红线引出 -> 连入主机【内门读卡】按钮 (462, 458) -->
+        <path d="M 911 190 L 911 150 L 780 150 L 780 448 L 462 448 L 462 458" stroke="#dc2626" stroke-width="2.4" fill="none"/>
 
-        <!-- 外门适配器 +12V (1160, 435) -> 门禁 +12V (1160, 520) -->
-        <path d="M 1160 435 L 1160 520" stroke="#dc2626" stroke-width="2.5" fill="none"/>
-        <!-- 外门适配器 GND (1300, 435) -> 门禁 GND (1300, 520) -->
-        <path d="M 1300 435 L 1300 520" stroke="#475569" stroke-width="2.5" fill="none"/>
+        <!-- 按钮 2 NO (1001, 190) -> 红线引出 -> 连入主机【外门读卡】按钮 (572, 458) -->
+        <path d="M 1001 190 L 1001 165 L 795 165 L 795 448 L 572 448 L 572 458" stroke="#dc2626" stroke-width="2.4" fill="none"/>
 
-        <!-- ---------------- H. 底层 RS485 菊花链总线 (橙色 A / 紫色 B) ---------------- -->
-        <!-- 485A 总线: 内门门禁 (110, 640) -> 摄像头 (650, 725) -> 外门门禁 (1210, 640) -->
-        <path d="M 110 640 L 110 745 L 650 745 L 650 725" stroke="#f97316" stroke-width="2" stroke-dasharray="6, 3" fill="none"/>
-        <path d="M 650 745 L 1210 745 L 1210 640" stroke="#f97316" stroke-width="2" stroke-dasharray="6, 3" fill="none"/>
+        <!-- 按钮 1 COM (939, 190) 与 按钮 2 COM (1029, 190) 黑线汇总 -> 连入主机【内门读卡】GND (510, 458) -->
+        <path d="M 1029 190 L 1029 175 L 939 175" stroke="#0f172a" stroke-width="2.4" fill="none"/>
+        <path d="M 939 190 L 939 175 L 810 175 L 810 440 L 510 440 L 510 458" stroke="#0f172a" stroke-width="2.4" fill="none"/>
 
-        <!-- 485B 总线: 内门门禁 (190, 640) -> 摄像头 (740, 725) -> 外门门禁 (1290, 640) -->
-        <path d="M 190 640 L 190 760 L 740 760 L 740 725" stroke="#9333ea" stroke-width="2" stroke-dasharray="6, 3" fill="none"/>
-        <path d="M 740 760 L 1290 760 L 1290 640" stroke="#9333ea" stroke-width="2" stroke-dasharray="6, 3" fill="none"/>
+        <!-- ---------------- ⑤ 下侧磁力锁与主机锁端口精确连线 (严格对照丝印) ---------------- -->
+        <!-- A. 内门磁力锁 (x: 420, y: 890) -> 主机【内门锁】端子排 (x: 430 ~ 570, y: 762) -->
+        <!-- 1. 磁力锁 12V+ (613, 890) -> 红色线 -> 主机【内门锁 - 开锁 (L+)】(558, 762) -->
+        <path d="M 613 890 L 613 830 L 558 830 L 558 762" stroke="#dc2626" stroke-width="2.5" fill="none"/>
+        <!-- 2. 磁力锁 12V- (573, 890) -> 黑色线 -> 主机【内门锁 - GND (第4脚)】(534, 762) -->
+        <path d="M 573 890 L 573 820 L 534 820 L 534 762" stroke="#0f172a" stroke-width="2.5" fill="none"/>
+        <!-- 3. 磁力锁 COM (496, 890) -> 绿色线 -> 主机【内门锁 - 门磁 (M+)】(486, 762) -->
+        <path d="M 496 890 L 496 810 L 486 810 L 486 762" stroke="#16a34a" stroke-width="2.5" fill="none"/>
+        <!-- 4. 磁力锁 NO (458, 890) -> 蓝色线 -> 主机【内门锁 - GND (第1脚)】(462, 762) -->
+        <path d="M 458 890 L 458 800 L 462 800 L 462 762" stroke="#0284c7" stroke-width="2.5" fill="none"/>
+
+        <!-- B. 外门磁力锁 (x: 730, y: 890) -> 主机【外门锁】端子排 (x: 584 ~ 704, y: 762) -->
+        <!-- 1. 磁力锁 12V+ (923, 890) -> 红色线 -> 主机【外门锁 - 开锁 (L+)】(692, 762) -->
+        <path d="M 923 890 L 923 830 L 692 830 L 692 762" stroke="#dc2626" stroke-width="2.5" fill="none"/>
+        <!-- 2. 磁力锁 12V- (883, 890) -> 黑色线 -> 主机【外门锁 - GND (第4脚)】(668, 762) -->
+        <path d="M 883 890 L 883 820 L 668 820 L 668 762" stroke="#0f172a" stroke-width="2.5" fill="none"/>
+        <!-- 3. 磁力锁 COM (806, 890) -> 绿色线 -> 主机【外门锁 - 门磁 (M+)】(620, 762) -->
+        <path d="M 806 890 L 806 810 L 620 810 L 620 762" stroke="#16a34a" stroke-width="2.5" fill="none"/>
+        <!-- 4. 磁力锁 NO (768, 890) -> 蓝色线 -> 主机【外门锁 - GND (第1脚)】(596, 762) -->
+        <path d="M 768 890 L 768 800 L 596 800 L 596 762" stroke="#0284c7" stroke-width="2.5" fill="none"/>
+
+        <!-- ---------------- ⑥ 控制器主机供电 ---------------- -->
+        <!-- 右下角电源适配器出线 -> 主机 +12V 电源孔 (840, 750) -->
+        <path d="M 1220 920 L 840 750" stroke="#dc2626" stroke-width="2.5" fill="none"/>
       </g>
 
-      <!-- ==================== 5. 导线功能文字说明标注 ==================== -->
-      <g font-family="'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#475569">
-        <text class="editable" x="375" y="125" text-anchor="middle" fill="#0284c7" font-weight="600">内门开锁 L+ (控电)</text>
-        <text class="editable" x="375" y="150" text-anchor="middle">内门电锁 12V-</text>
-        <text class="editable" x="340" y="175" text-anchor="middle" fill="#0284c7">内门门磁 COM</text>
-        <text class="editable" x="340" y="224" text-anchor="middle">内门门磁 NO</text>
-
-        <text class="editable" x="750" y="75" text-anchor="middle" fill="#0284c7" font-weight="600">外门电锁 L+ / GND 控锁回路 (顶端跨接)</text>
-        <text class="editable" x="750" y="55" text-anchor="middle" fill="#0284c7">外门门磁反馈信号线 (闭门互锁判定)</text>
-
-        <text class="editable" x="480" y="345" fill="#16a34a" font-weight="600">内门开门触发信号 (并联接入【内门读卡-按钮】)</text>
-        <text class="editable" x="480" y="375" fill="#64748b">内门公共接地基准 (接入【内门读卡-GND】)</text>
-
-        <text class="editable" x="1005" y="350" text-anchor="end" fill="#16a34a" font-weight="600">外门开门信号 (并联接【外门读卡-按钮】)</text>
-        <text class="editable" x="1005" y="275" text-anchor="end" fill="#64748b">外门公共地 (接【外门读卡-GND】)</text>
-
-        <text class="editable" x="135" y="475" fill="#dc2626" font-size="10">独立 12V 供电</text>
-        <text class="editable" x="1195" y="475" fill="#dc2626" font-size="10">独立 12V 供电</text>
-
-        <text class="editable" x="400" y="740" fill="#f97316" font-size="10">RS-485 A (双绞屏蔽线)</text>
-        <text class="editable" x="400" y="775" fill="#9333ea" font-size="10">RS-485 B (双绞屏蔽线)</text>
-      </g>
-
-      <!-- ==================== 6. 电气节点实心小圆点 (磁吸点与电气连通点) ==================== -->
+      <!-- ==================== 3. 端子吸附节点与并联连通点 ==================== -->
       <g id="terminals-group" fill="#0f172a" stroke="#ffffff" stroke-width="1.5">
-        <!-- 内门电锁端子 -->
-        <circle cx="300" cy="130" r="3.5" data-snap="内门电锁 12V+"/>
-        <circle cx="300" cy="155" r="3.5" data-snap="内门电锁 12V-"/>
-        <circle cx="300" cy="180" r="3.5" data-snap="内门电锁 COM"/>
-        <circle cx="300" cy="205" r="3.5" data-snap="内门电锁 NO"/>
-
-        <!-- 外门电锁端子 -->
-        <circle cx="1100" cy="130" r="3.5" data-snap="外门电锁 12V+"/>
-        <circle cx="1100" cy="155" r="3.5" data-snap="外门电锁 12V-"/>
-        <circle cx="1100" cy="180" r="3.5" data-snap="外门电锁 COM"/>
-        <circle cx="1100" cy="205" r="3.5" data-snap="外门电锁 NO"/>
-
-        <!-- 内门按钮 -->
-        <circle cx="300" cy="300" r="3.5" data-snap="内门按钮 COM"/>
-        <circle cx="300" cy="325" r="3.5" data-snap="内门按钮 NO"/>
-
-        <!-- 外门按钮 -->
-        <circle cx="1100" cy="300" r="3.5" data-snap="外门按钮 COM"/>
-        <circle cx="1100" cy="325" r="3.5" data-snap="外门按钮 NO"/>
-
-        <!-- 内门电源适配器 -->
-        <circle cx="100" cy="425" r="3.5" fill="#dc2626" data-snap="内门电源 +12V"/>
-        <circle cx="240" cy="425" r="3.5" fill="#475569" data-snap="内门电源 GND"/>
-
-        <!-- 外门电源适配器 -->
-        <circle cx="1160" cy="425" r="3.5" fill="#dc2626" data-snap="外门电源 +12V"/>
-        <circle cx="1300" cy="425" r="3.5" fill="#475569" data-snap="外门电源 GND"/>
+        <!-- 摄像机端子 -->
+        <circle cx="150" cy="140" r="4" fill="#15803d" data-snap="摄像机 485A"/>
+        <circle cx="200" cy="140" r="4" fill="#ca8a04" data-snap="摄像机 485B"/>
 
         <!-- 内门门禁端子 -->
-        <circle cx="100" cy="525" r="3.5" fill="#dc2626" data-snap="内门门禁 +12V"/>
-        <circle cx="240" cy="525" r="3.5" fill="#475569" data-snap="内门门禁 GND"/>
-        <circle cx="300" cy="570" r="3.5" data-snap="内门门禁 COM"/>
-        <circle cx="300" cy="600" r="3.5" data-snap="内门门禁 NO"/>
-        <circle cx="110" cy="635" r="3.5" fill="#f97316" data-snap="内门门禁 485A"/>
-        <circle cx="190" cy="635" r="3.5" fill="#9333ea" data-snap="内门门禁 485B"/>
+        <circle cx="420" cy="140" r="4" fill="#15803d" data-snap="内门门禁 485A"/>
+        <circle cx="470" cy="140" r="4" fill="#ca8a04" data-snap="内门门禁 485B"/>
+        <circle cx="400" cy="391" r="4" fill="#0284c7" data-snap="内门门禁 NO"/>
+        <circle cx="430" cy="391" r="4" fill="#0284c7" data-snap="内门门禁 COM"/>
+        <circle cx="460" cy="391" r="4" fill="#64748b" data-snap="内门门禁 GND"/>
+        <circle cx="490" cy="391" r="4" fill="#dc2626" data-snap="内门门禁 12V"/>
 
         <!-- 外门门禁端子 -->
-        <circle cx="1160" cy="525" r="3.5" fill="#dc2626" data-snap="外门门禁 +12V"/>
-        <circle cx="1300" cy="525" r="3.5" fill="#475569" data-snap="外门门禁 GND"/>
-        <circle cx="1100" cy="570" r="3.5" data-snap="外门门禁 COM"/>
-        <circle cx="1100" cy="600" r="3.5" data-snap="外门门禁 NO"/>
-        <circle cx="1210" cy="635" r="3.5" fill="#f97316" data-snap="外门门禁 485A"/>
-        <circle cx="1290" cy="635" r="3.5" fill="#9333ea" data-snap="外门门禁 485B"/>
+        <circle cx="640" cy="140" r="4" fill="#15803d" data-snap="外门门禁 485A"/>
+        <circle cx="690" cy="140" r="4" fill="#ca8a04" data-snap="外门门禁 485B"/>
+        <circle cx="620" cy="391" r="4" fill="#0284c7" data-snap="外门门禁 NO"/>
+        <circle cx="650" cy="391" r="4" fill="#0284c7" data-snap="外门门禁 COM"/>
+        <circle cx="680" cy="391" r="4" fill="#64748b" data-snap="外门门禁 GND"/>
+        <circle cx="710" cy="391" r="4" fill="#dc2626" data-snap="外门门禁 12V"/>
 
-        <!-- 控制器左侧接线点 -->
-        <circle cx="466" cy="130" r="3.5" fill="#22c55e" data-snap="控制器内门锁 L+"/>
-        <circle cx="466" cy="155" r="3.5" fill="#22c55e" data-snap="控制器内门锁 GND"/>
-        <circle cx="466" cy="180" r="3.5" fill="#22c55e" data-snap="控制器内门锁 S+"/>
-        <circle cx="466" cy="205" r="3.5" fill="#22c55e" data-snap="控制器内门锁 M+"/>
-        <circle cx="466" cy="230" r="3.5" fill="#22c55e" data-snap="控制器内门锁 GND"/>
+        <!-- 开门按钮 1 -->
+        <circle cx="911" cy="190" r="4" fill="#22c55e" data-snap="开门按钮1 NO"/>
+        <circle cx="939" cy="190" r="4" fill="#15803d" data-snap="开门按钮1 COM"/>
 
-        <circle cx="466" cy="270" r="3.5" fill="#22c55e" data-snap="控制器外门锁 L+"/>
-        <circle cx="466" cy="295" r="3.5" fill="#22c55e" data-snap="控制器外门锁 GND"/>
-        <circle cx="466" cy="320" r="3.5" fill="#22c55e" data-snap="控制器外门锁 S+"/>
-        <circle cx="466" cy="345" r="3.5" fill="#22c55e" data-snap="控制器外门锁 M+"/>
-        <circle cx="466" cy="370" r="3.5" fill="#22c55e" data-snap="控制器外门锁 GND"/>
+        <!-- 开门按钮 2 -->
+        <circle cx="1001" cy="190" r="4" fill="#22c55e" data-snap="开门按钮2 NO"/>
+        <circle cx="1029" cy="190" r="4" fill="#15803d" data-snap="开门按钮2 COM"/>
 
-        <!-- 控制器右侧接线点 -->
-        <circle cx="934" cy="130" r="3.5" fill="#22c55e" data-snap="控制器内门读卡 +12V"/>
-        <circle cx="934" cy="155" r="3.5" fill="#22c55e" data-snap="控制器内门读卡 GND"/>
-        <circle cx="934" cy="180" r="3.5" fill="#22c55e" data-snap="控制器内门读卡 TM"/>
-        <circle cx="934" cy="205" r="3.5" fill="#22c55e" data-snap="控制器内门读卡 按钮"/>
+        <!-- 主机上侧接线点 -->
+        <circle cx="462" cy="458" r="4" fill="#22c55e" data-snap="主机内门读卡-按钮"/>
+        <circle cx="510" cy="458" r="4" fill="#22c55e" data-snap="主机内门读卡-GND"/>
+        <circle cx="572" cy="458" r="4" fill="#22c55e" data-snap="主机外门读卡-按钮"/>
+        <circle cx="620" cy="458" r="4" fill="#22c55e" data-snap="主机外门读卡-GND"/>
 
-        <circle cx="934" cy="260" r="3.5" fill="#22c55e" data-snap="控制器外门读卡 +12V"/>
-        <circle cx="934" cy="287" r="3.5" fill="#22c55e" data-snap="控制器外门读卡 GND"/>
-        <circle cx="934" cy="311" r="3.5" fill="#22c55e" data-snap="控制器外门读卡 TM"/>
-        <circle cx="934" cy="335" r="3.5" fill="#22c55e" data-snap="控制器外门读卡 按钮"/>
+        <!-- 主机下侧接线点 -->
+        <circle cx="462" cy="762" r="4" fill="#22c55e" data-snap="主机内门锁-GND1"/>
+        <circle cx="486" cy="762" r="4" fill="#22c55e" data-snap="主机内门锁-门磁M+"/>
+        <circle cx="534" cy="762" r="4" fill="#22c55e" data-snap="主机内门锁-GND4"/>
+        <circle cx="558" cy="762" r="4" fill="#22c55e" data-snap="主机内门锁-开锁L+"/>
 
-        <!-- 电气并联连通实心节点 (Junctions) -->
-        <circle cx="410" cy="360" r="4" fill="#16a34a"/>
-        <circle cx="400" cy="350" r="4" fill="#475569"/>
-        <circle cx="1020" cy="335" r="4" fill="#16a34a"/>
-        <circle cx="1030" cy="287" r="4" fill="#475569"/>
+        <circle cx="596" cy="762" r="4" fill="#22c55e" data-snap="主机外门锁-GND1"/>
+        <circle cx="620" cy="762" r="4" fill="#22c55e" data-snap="主机外门锁-门磁M+"/>
+        <circle cx="668" cy="762" r="4" fill="#22c55e" data-snap="主机外门锁-GND4"/>
+        <circle cx="692" cy="762" r="4" fill="#22c55e" data-snap="主机外门锁-开锁L+"/>
+
+        <!-- 磁力锁 1 接线点 -->
+        <circle cx="458" cy="890" r="4" fill="#0284c7" data-snap="内门磁力锁 NO"/>
+        <circle cx="496" cy="890" r="4" fill="#15803d" data-snap="内门磁力锁 COM"/>
+        <circle cx="573" cy="890" r="4" fill="#475569" data-snap="内门磁力锁 12V-"/>
+        <circle cx="613" cy="890" r="4" fill="#dc2626" data-snap="内门磁力锁 12V+"/>
+
+        <!-- 磁力锁 2 接线点 -->
+        <circle cx="768" cy="890" r="4" fill="#0284c7" data-snap="外门磁力锁 NO"/>
+        <circle cx="806" cy="890" r="4" fill="#15803d" data-snap="外门磁力锁 COM"/>
+        <circle cx="883" cy="890" r="4" fill="#475569" data-snap="外门磁力锁 12V-"/>
+        <circle cx="923" cy="890" r="4" fill="#dc2626" data-snap="外门磁力锁 12V+"/>
+
+        <!-- 主机电源接口 -->
+        <circle cx="840" cy="750" r="5" fill="#dc2626" data-snap="主机 +12V 电源孔"/>
       </g>
 
-      <!-- ==================== 7. 底部图例与接线施工核心要点 ==================== -->
-      <g id="legend-and-notes" transform="translate(50, 785)">
-        <!-- 图例框 (左侧) -->
-        <rect x="0" y="0" width="480" height="110" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+      <!-- ==================== 4. 底部图例与接线施工核心要点 ==================== -->
+      <g id="legend-and-notes" transform="translate(100, 1040)">
+        <rect x="0" y="0" width="460" height="110" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
         <text class="editable" x="18" y="24" font-family="'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" font-weight="bold" fill="#0f172a">图 例 说 明</text>
         
-        <line x1="20" y1="46" x2="65" y2="46" stroke="#16a34a" stroke-width="2.5"/>
-        <text class="editable" x="72" y="50" font-size="11" fill="#334155">开门信号 (NO触点脉冲)</text>
+        <line x1="20" y1="46" x2="65" y2="46" stroke="#dc2626" stroke-width="2.5"/>
+        <text class="editable" x="72" y="50" font-size="11" fill="#334155">12V+ 供电正极 / 开门信号触发</text>
 
-        <line x1="240" y1="46" x2="285" y2="46" stroke="#dc2626" stroke-width="2.5"/>
-        <text class="editable" x="292" y="50" font-size="11" fill="#334155">12V 供电正极 (+12V)</text>
+        <line x1="240" y1="46" x2="285" y2="46" stroke="#0f172a" stroke-width="2.5"/>
+        <text class="editable" x="292" y="50" font-size="11" fill="#334155">GND 公共地 / 485B 通讯负</text>
 
-        <line x1="20" y1="72" x2="65" y2="72" stroke="#0284c7" stroke-width="2.5"/>
-        <text class="editable" x="72" y="76" font-size="11" fill="#334155">控锁输出 (L+) / 门磁 (M+)</text>
+        <line x1="20" y1="72" x2="65" y2="72" stroke="#16a34a" stroke-width="2.5"/>
+        <text class="editable" x="72" y="76" font-size="11" fill="#334155">门磁公共端 (COM) / 开门NO脉冲</text>
 
-        <line x1="240" y1="72" x2="285" y2="72" stroke="#475569" stroke-width="2.5"/>
-        <text class="editable" x="292" y="76" font-size="11" fill="#334155">公共端 / 电源负极 (GND)</text>
+        <line x1="240" y1="72" x2="285" y2="72" stroke="#0284c7" stroke-width="2.5"/>
+        <text class="editable" x="292" y="76" font-size="11" fill="#334155">门磁常开端 (NO) 信号输入</text>
 
-        <line x1="20" y1="96" x2="65" y2="96" stroke="#f97316" stroke-width="2" stroke-dasharray="4,2"/>
-        <text class="editable" x="72" y="100" font-size="11" fill="#334155">RS-485 A (双绞屏蔽线)</text>
+        <line x1="20" y1="96" x2="65" y2="96" stroke="#dc2626" stroke-width="2.5"/>
+        <text class="editable" x="72" y="100" font-size="11" fill="#334155">RS-485 A (双绞屏蔽线正)</text>
 
-        <line x1="240" y1="96" x2="285" y2="96" stroke="#9333ea" stroke-width="2" stroke-dasharray="4,2"/>
-        <text class="editable" x="292" y="100" font-size="11" fill="#334155">RS-485 B (双绞屏蔽线)</text>
+        <line x1="240" y1="96" x2="285" y2="96" stroke="#64748b" stroke-width="2.5"/>
+        <text class="editable" x="292" y="100" font-size="11" fill="#334155">电源适配器独立负极 (GND)</text>
 
         <!-- 接线要点规范 (右侧) -->
-        <rect x="500" y="0" width="800" height="110" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
-        <text class="editable" x="520" y="24" font-family="'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" font-weight="bold" fill="#0f172a">施工与接线要点 (请严格遵守规范)</text>
+        <rect x="490" y="0" width="890" height="110" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+        <text class="editable" x="510" y="24" font-family="'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" font-weight="bold" fill="#0f172a">接线与端子定义核心规范 (严格对照图片丝印)</text>
         <g font-family="'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#475569">
-          <text class="editable" x="520" y="46">1. 【互锁闭环原理】：门磁信号 (M+ / GND) 用于判定门扇开闭状态。外门未完全吸合闭门时，控制器自动锁定内门，刷卡/按钮均无效。</text>
-          <text class="editable" x="520" y="66">2. 【电锁接线】：磁力锁为断电开门锁具，正负极接控制器【L+】与【GND】；门磁检测输出接入对应通道【M+】与【GND】。</text>
-          <text class="editable" x="520" y="86">3. 【信号并联与独立供电】：门禁机继电器干接点 (NO/COM) 与开门按钮 (NO/COM) 呈并联接入；门禁机由 12V2A 电源独立供电并共地。</text>
-          <text class="editable" x="520" y="104">4. 【拨码延时设定】：依实物面板拨码 3、4 脚设定开门保持时间：上上为 3 秒、下上为 5 秒、上下为 7 秒、下下为 9 秒。</text>
+          <text class="editable" x="510" y="46">1. 【磁力锁回路】：磁力锁 12V+ 接主机【开锁 L+】，12V- 接【GND】；磁力锁门磁反馈 COM 接【门磁 M+】，NO 接【GND】（NC 端子悬空不接）。</text>
+          <text class="editable" x="510" y="66">2. 【开门信号并联】：门禁设备继电器 NO/COM 与开门按钮 NO/COM 分别并联接入主机的【内门读卡/外门读卡】的【按钮】与【GND】端子。</text>
+          <text class="editable" x="510" y="86">3. 【RS-485 菊花链总线】：联动摄像机 485A/B ── 内门门禁 485A/B ── 外门门禁 485A/B 采用手拉手并联总线，实现人脸识别联动抓拍。</text>
+          <text class="editable" x="510" y="104">4. 【供电隔离】：门禁设备采用专用 12V2A 电源适配器独立供电，联动门主机采用专用电源适配器由 +12V 孔接入供电。</text>
         </g>
       </g>
 
-      <!-- ==================== 8. 用户新增划线与标注图层 ==================== -->
+      <!-- ==================== 5. 用户新增划线与标注图层 ==================== -->
       <g id="user-wires-group"></g>
 
-      <!-- ==================== 9. 交互辅助层 (动态吸附指示、控制手柄、预览线) ==================== -->
+      <!-- ==================== 6. 交互辅助层 ==================== -->
       <g id="interaction-layer">
-        <!-- 预览正在绘制的导线 -->
-        <path id="drawing-preview-wire" d="" fill="none" stroke="#22c55e" stroke-width="2.2" stroke-dasharray="4, 3" style="display:none; pointer-events:none;"/>
-        <!-- 磁吸吸附环 -->
+        <path id="drawing-preview-wire" d="" fill="none" stroke="#22c55e" stroke-width="2.4" stroke-dasharray="4, 3" style="display:none; pointer-events:none;"/>
         <circle id="snap-indicator" class="snap-indicator" cx="0" cy="0" r="9" style="display:none;"/>
       </g>
     </svg>
@@ -836,14 +951,11 @@
 </div>
 
 <script>
-// ==========================================
-// 状态与全局变量
-// ==========================================
 const state = {
-  viewMode: 'draw', // 'draw' | 'select'
-  lineMode: 'orthogonal', // 'orthogonal' | 'straight' | 'polyline'
+  viewMode: 'draw',
+  lineMode: 'orthogonal',
   lineColor: '#dc2626',
-  lineWidth: 2.2,
+  lineWidth: 2.4,
   lineDash: 'solid',
   arrowMode: 'dot',
   snapEnabled: true,
@@ -854,13 +966,11 @@ const state = {
   panStartX: 0,
   panStartY: 0,
   isSpacePressed: false,
-  // 划线状态
   isDrawing: false,
   drawStartPoint: null,
   currentPoints: [],
   selectedWireId: null,
   activeHandleIndex: -1,
-  // 历史栈 (撤销/重做)
   history: [],
   historyIndex: -1
 };
@@ -873,7 +983,6 @@ const dom = {
   snapIndicator: document.getElementById('snap-indicator'),
   userWiresGroup: document.getElementById('user-wires-group'),
   svgDefs: document.getElementById('svg-defs'),
-  // 按钮
   btnDrawMode: document.getElementById('btn-draw-mode'),
   btnSelectMode: document.getElementById('btn-select-mode'),
   btnUndo: document.getElementById('btn-undo'),
@@ -886,7 +995,6 @@ const dom = {
   btnExportPng: document.getElementById('btn-export-png'),
   btnExportSvg: document.getElementById('btn-export-svg'),
   btnAddLineLabel: document.getElementById('btn-add-line-label'),
-  // 属性选择
   selectLineMode: document.getElementById('line-mode-select'),
   selectLineWidth: document.getElementById('line-width-select'),
   selectLineDash: document.getElementById('line-dash-select'),
@@ -896,13 +1004,8 @@ const dom = {
   hintText: document.getElementById('hint-text')
 };
 
-// 存储用户添加的所有导线对象
-// wire = { id, mode, color, width, dash, arrow, points: [{x, y}], label: '' }
 let userWires = [];
 
-// ==========================================
-// 坐标转换与端子磁吸
-// ==========================================
 function clientToSvgPoint(clientX, clientY) {
   const pt = dom.svg.createSVGPoint();
   pt.x = clientX;
@@ -916,7 +1019,7 @@ function clientToSvgPoint(clientX, clientY) {
 
 function getAllSnapPoints() {
   const points = [];
-  const circles = dom.svg.querySelectorAll('#terminals-group circle, #device-boxes-group circle');
+  const circles = dom.svg.querySelectorAll('#terminals-group circle');
   circles.forEach(c => {
     points.push({
       x: parseFloat(c.getAttribute('cx')),
@@ -924,7 +1027,6 @@ function getAllSnapPoints() {
       name: c.getAttribute('data-snap') || '端子'
     });
   });
-  // 也吸附已有用户线的端点
   userWires.forEach(w => {
     if (w.points && w.points.length > 0) {
       points.push({ x: w.points[0].x, y: w.points[0].y, name: '导线起点' });
@@ -934,7 +1036,7 @@ function getAllSnapPoints() {
   return points;
 }
 
-function getSnappedPoint(rawPt, tolerance = 16) {
+function getSnappedPoint(rawPt, tolerance = 18) {
   if (!state.snapEnabled) {
     dom.snapIndicator.style.display = 'none';
     return rawPt;
@@ -962,9 +1064,6 @@ function getSnappedPoint(rawPt, tolerance = 16) {
   }
 }
 
-// ==========================================
-// 历史记录与撤销重做 (Undo / Redo)
-// ==========================================
 function saveHistorySnapshot() {
   if (state.historyIndex < state.history.length - 1) {
     state.history = state.history.slice(0, state.historyIndex + 1);
@@ -1003,9 +1102,6 @@ function updateUndoRedoButtons() {
   dom.btnDelete.disabled = !state.selectedWireId;
 }
 
-// ==========================================
-// 箭头 Marker 动态注册
-// ==========================================
 function ensureArrowMarker(color) {
   const safeId = 'marker-arrow-' + color.replace('#', '');
   if (!document.getElementById(safeId)) {
@@ -1026,17 +1122,12 @@ function ensureArrowMarker(color) {
   return safeId;
 }
 
-// ==========================================
-// 走线路径计算与生成
-// ==========================================
 function computeOrthogonalPoints(p1, p2) {
   const dx = Math.abs(p2.x - p1.x);
   const dy = Math.abs(p2.y - p1.y);
-  // 若两点接近水平或垂直，直接成一直线
   if (dx < 4 || dy < 4) {
     return [p1, p2];
   }
-  // 默认中途折线：优先先水平走半程再垂直折弯
   const midX = (p1.x + p2.x) / 2;
   return [
     p1,
@@ -1072,9 +1163,6 @@ function buildEffectivePoints(p1, p2, mode, isShift = false) {
   return [p1, p2];
 }
 
-// ==========================================
-// 导线渲染与交互
-// ==========================================
 function renderUserWireGroup(wire) {
   const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   g.setAttribute('id', 'wire-g-' + wire.id);
@@ -1084,7 +1172,6 @@ function renderUserWireGroup(wire) {
   const isSelected = state.selectedWireId === wire.id;
   const pathD = pointsToPathD(wire.points);
 
-  // 1. 底层透明加粗感应线 (方便点击选中)
   const hitPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   hitPath.setAttribute('d', pathD);
   hitPath.setAttribute('stroke', 'transparent');
@@ -1093,7 +1180,6 @@ function renderUserWireGroup(wire) {
   hitPath.style.cursor = 'pointer';
   g.appendChild(hitPath);
 
-  // 2. 主体导线
   const mainPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   mainPath.setAttribute('d', pathD);
   mainPath.setAttribute('stroke', isSelected ? '#0ea5e9' : wire.color);
@@ -1105,7 +1191,6 @@ function renderUserWireGroup(wire) {
   if (wire.dash === 'dashed') mainPath.setAttribute('stroke-dasharray', '5, 4');
   else if (wire.dash === 'dotted') mainPath.setAttribute('stroke-dasharray', '2, 3');
 
-  // 端点箭头/圆点处理
   if (wire.arrow === 'end-arrow') {
     const markerId = ensureArrowMarker(isSelected ? '#0ea5e9' : wire.color);
     mainPath.setAttribute('marker-end', `url(#${markerId})`);
@@ -1116,7 +1201,6 @@ function renderUserWireGroup(wire) {
   }
   g.appendChild(mainPath);
 
-  // 若为圆点模式，绘制两端端子圆点
   if (wire.arrow === 'dot' && wire.points.length >= 2) {
     const pStart = wire.points[0];
     const pEnd = wire.points[wire.points.length - 1];
@@ -1124,19 +1208,18 @@ function renderUserWireGroup(wire) {
     const dot1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     dot1.setAttribute('cx', pStart.x);
     dot1.setAttribute('cy', pStart.y);
-    dot1.setAttribute('r', isSelected ? 4 : 3.2);
+    dot1.setAttribute('r', isSelected ? 4.5 : 3.5);
     dot1.setAttribute('fill', isSelected ? '#0ea5e9' : wire.color);
     g.appendChild(dot1);
 
     const dot2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     dot2.setAttribute('cx', pEnd.x);
     dot2.setAttribute('cy', pEnd.y);
-    dot2.setAttribute('r', isSelected ? 4 : 3.2);
+    dot2.setAttribute('r', isSelected ? 4.5 : 3.5);
     dot2.setAttribute('fill', isSelected ? '#0ea5e9' : wire.color);
     g.appendChild(dot2);
   }
 
-  // 3. 线上文本标注 (如果设置了标注)
   if (wire.label && wire.points.length >= 2) {
     const midIdx = Math.floor(wire.points.length / 2);
     const pA = wire.points[midIdx - 1] || wire.points[0];
@@ -1178,7 +1261,6 @@ function renderUserWireGroup(wire) {
     g.appendChild(textEl);
   }
 
-  // 4. 选中模式下的端点控制手柄 (可拖拽修改两端)
   if (isSelected) {
     wire.points.forEach((pt, idx) => {
       if (idx === 0 || idx === wire.points.length - 1) {
@@ -1196,7 +1278,6 @@ function renderUserWireGroup(wire) {
     });
   }
 
-  // 导线点击选中事件
   g.addEventListener('click', (e) => {
     if (state.viewMode === 'select') {
       e.stopPropagation();
@@ -1222,7 +1303,7 @@ function selectWire(id) {
   if (id) {
     const w = userWires.find(item => item.id === id);
     if (w) {
-      dom.hintText.textContent = `已选中导线 (模式: ${w.mode}) ｜ 按 Delete 键或点击按钮删除 ｜ 双击文字修改标注`;
+      dom.hintText.textContent = `已选中导线 ｜ 按 Delete 键删除 ｜ 双击文字修改标注`;
     }
   }
 }
@@ -1244,9 +1325,6 @@ function createNewUserWire(points) {
   return newWire;
 }
 
-// ==========================================
-// 交互模式切换
-// ==========================================
 function setInteractionMode(mode) {
   state.viewMode = mode;
   if (mode === 'draw') {
@@ -1254,7 +1332,7 @@ function setInteractionMode(mode) {
     dom.btnSelectMode.classList.remove('active');
     dom.container.classList.add('drawing-mode');
     document.getElementById('draw-mode-label').textContent = '正在划线 (点击/拖拽)';
-    dom.hintText.textContent = '【划线模式】点击或拖拽端子绘制连线 ｜ 支持端子智能磁吸 ｜ 切换走线模式';
+    dom.hintText.textContent = '【划线模式】点击或拖拽端子绘制连线 ｜ 支持端子智能磁吸';
   } else {
     dom.btnDrawMode.classList.remove('draw-active');
     dom.btnSelectMode.classList.add('active');
@@ -1265,13 +1343,9 @@ function setInteractionMode(mode) {
   }
 }
 
-// ==========================================
-// 鼠标与绘图事件监听
-// ==========================================
-let polylinePoints = []; // 多段折线暂存
+let polylinePoints = [];
 
 dom.container.addEventListener('mousedown', (e) => {
-  // 中键或按住空格拖拽平移画布
   if (e.button === 1 || (e.button === 0 && state.isSpacePressed)) {
     state.isPanning = true;
     state.panStartX = e.clientX - state.panX;
@@ -1281,21 +1355,18 @@ dom.container.addEventListener('mousedown', (e) => {
     return;
   }
 
-  if (e.button !== 0) return; // 只处理左键
+  if (e.button !== 0) return;
 
   const rawPt = clientToSvgPoint(e.clientX, e.clientY);
 
-  // 1. 如果在【选择模式】下点击了手柄，开始拖拽端点
   if (state.viewMode === 'select' && e.target.classList.contains('wire-handle')) {
     state.activeHandleIndex = parseInt(e.target.dataset.pointIndex);
     return;
   }
 
-  // 2. 如果在【划线模式】
   if (state.viewMode === 'draw') {
     const snapPt = getSnappedPoint(rawPt);
     
-    // 多段折线模式
     if (state.lineMode === 'polyline') {
       polylinePoints.push(snapPt);
       if (polylinePoints.length === 1) {
@@ -1306,7 +1377,6 @@ dom.container.addEventListener('mousedown', (e) => {
       return;
     }
 
-    // 直角折线 / 直线模式: 记录起点
     state.isDrawing = true;
     state.drawStartPoint = snapPt;
     dom.previewWire.style.display = 'block';
@@ -1315,7 +1385,6 @@ dom.container.addEventListener('mousedown', (e) => {
 });
 
 window.addEventListener('mousemove', (e) => {
-  // 画布平移处理
   if (state.isPanning) {
     state.panX = e.clientX - state.panStartX;
     state.panY = e.clientY - state.panStartY;
@@ -1325,7 +1394,6 @@ window.addEventListener('mousemove', (e) => {
 
   const rawPt = clientToSvgPoint(e.clientX, e.clientY);
 
-  // 1. 拖拽调整导线手柄
   if (state.activeHandleIndex >= 0 && state.selectedWireId) {
     const snapPt = getSnappedPoint(rawPt);
     const wire = userWires.find(w => w.id === state.selectedWireId);
@@ -1340,7 +1408,6 @@ window.addEventListener('mousemove', (e) => {
     return;
   }
 
-  // 2. 划线模式移动预览
   if (state.viewMode === 'draw') {
     const snapPt = getSnappedPoint(rawPt);
 
@@ -1374,7 +1441,6 @@ window.addEventListener('mouseup', (e) => {
     const p1 = state.drawStartPoint;
     const p2 = snapPt;
 
-    // 只有当起终点距离大于 6px 时才成线，避免误触
     if (p1 && Math.hypot(p2.x - p1.x, p2.y - p1.y) > 6) {
       const finalPts = buildEffectivePoints(p1, p2, state.lineMode, e.shiftKey);
       createNewUserWire(finalPts);
@@ -1386,15 +1452,12 @@ window.addEventListener('mouseup', (e) => {
   }
 });
 
-// 多段折线双击或 Enter 结束
 window.addEventListener('keydown', (e) => {
-  // 空格键平移指示
   if (e.code === 'Space' && !state.isSpacePressed && document.activeElement.tagName !== 'INPUT') {
     state.isSpacePressed = true;
     dom.container.style.cursor = 'grab';
   }
 
-  // Esc 取消划线
   if (e.key === 'Escape') {
     if (state.isDrawing) {
       state.isDrawing = false;
@@ -1406,7 +1469,6 @@ window.addEventListener('keydown', (e) => {
     selectWire(null);
   }
 
-  // Enter 完成多段线
   if (e.key === 'Enter' && state.lineMode === 'polyline' && polylinePoints.length >= 2) {
     createNewUserWire(polylinePoints);
     polylinePoints = [];
@@ -1414,17 +1476,14 @@ window.addEventListener('keydown', (e) => {
     dom.previewWire.style.display = 'none';
   }
 
-  // Delete / Backspace 删除选中导线
   if ((e.key === 'Delete' || e.key === 'Backspace') && state.selectedWireId && document.activeElement.tagName !== 'INPUT') {
     deleteSelectedWire();
   }
 
-  // Ctrl+Z 撤销
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
     e.preventDefault();
     undoAction();
   }
-  // Ctrl+Y 或 Ctrl+Shift+Z 重做
   if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
     e.preventDefault();
     redoAction();
@@ -1456,9 +1515,6 @@ function deleteSelectedWire() {
   updateUndoRedoButtons();
 }
 
-// ==========================================
-// 画布缩放与平移 (Zoom & Pan)
-// ==========================================
 function updateTransform() {
   dom.viewport.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.scale})`;
 }
@@ -1466,7 +1522,7 @@ function updateTransform() {
 function zoom(delta, clientX, clientY) {
   const oldScale = state.scale;
   let newScale = oldScale * delta;
-  newScale = Math.min(Math.max(0.35, newScale), 4.0);
+  newScale = Math.min(Math.max(0.3, newScale), 4.0);
 
   const rect = dom.container.getBoundingClientRect();
   const cx = clientX !== undefined ? clientX - rect.left : rect.width / 2;
@@ -1486,8 +1542,8 @@ dom.container.addEventListener('wheel', (e) => {
 
 function resetView() {
   const rect = dom.container.getBoundingClientRect();
-  const svgW = 1400;
-  const svgH = 920;
+  const svgW = 1600;
+  const svgH = 1180;
   const scaleX = (rect.width - 40) / svgW;
   const scaleY = (rect.height - 40) / svgH;
   state.scale = Math.min(scaleX, scaleY, 1.05);
@@ -1496,9 +1552,6 @@ function resetView() {
   updateTransform();
 }
 
-// ==========================================
-// 双击原位编辑任意文本
-// ==========================================
 function setupTextEditing() {
   dom.svg.addEventListener('dblclick', (e) => {
     const target = e.target;
@@ -1543,24 +1596,20 @@ function setupTextEditing() {
   });
 }
 
-// ==========================================
-// 导出 PNG 与矢量 SVG
-// ==========================================
 function exportSVG() {
-  // 临时隐藏交互指示
   dom.snapIndicator.style.display = 'none';
   dom.previewWire.style.display = 'none';
 
   const serializer = new XMLSerializer();
   let source = serializer.serializeToString(dom.svg);
-  if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+  if (!source.match(/^<svg[^>]+xmlns="http\\:\\/\\/www\\.w3\\.org\\/2000\\/svg"/)) {
     source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
   }
   const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `AB门互锁接线图_魔点控制器_${new Date().toISOString().slice(0,10)}.svg`;
+  a.download = `AB门互锁接线图_BJRANDE-760_${new Date().toISOString().slice(0,10)}.svg`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -1580,9 +1629,9 @@ function exportPNG() {
   const img = new Image();
   img.onload = function() {
     const canvas = document.createElement('canvas');
-    const scaleFactor = 2.0; // 2x 超高清
-    canvas.width = 1400 * scaleFactor;
-    canvas.height = 920 * scaleFactor;
+    const scaleFactor = 2.0;
+    canvas.width = 1600 * scaleFactor;
+    canvas.height = 1180 * scaleFactor;
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
@@ -1594,7 +1643,7 @@ function exportPNG() {
     const pngUrl = canvas.toDataURL('image/png');
     const a = document.createElement('a');
     a.href = pngUrl;
-    a.download = `AB门互锁接线图_魔点控制器_${new Date().toISOString().slice(0,10)}.png`;
+    a.download = `AB门互锁接线图_BJRANDE-760_${new Date().toISOString().slice(0,10)}.png`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1603,22 +1652,16 @@ function exportPNG() {
   img.src = blobURL;
 }
 
-// ==========================================
-// 初始化绑定
-// ==========================================
 function init() {
-  // 模式切换
   dom.btnDrawMode.addEventListener('click', () => setInteractionMode('draw'));
   dom.btnSelectMode.addEventListener('click', () => setInteractionMode('select'));
 
-  // 走线设置
   dom.selectLineMode.addEventListener('change', (e) => state.lineMode = e.target.value);
   dom.selectLineWidth.addEventListener('change', (e) => state.lineWidth = parseFloat(e.target.value));
   dom.selectLineDash.addEventListener('change', (e) => state.lineDash = e.target.value);
   dom.selectArrow.addEventListener('change', (e) => state.arrowMode = e.target.value);
   dom.checkSnap.addEventListener('change', (e) => state.snapEnabled = e.target.checked);
 
-  // 颜色选择
   document.querySelectorAll('.color-swatch').forEach(sw => {
     sw.addEventListener('click', () => {
       document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
@@ -1641,7 +1684,6 @@ function init() {
     }
   });
 
-  // 线上加字
   dom.btnAddLineLabel.addEventListener('click', () => {
     if (!state.selectedWireId) {
       alert('请先在【编辑/选择】模式下点击选中一条导线！');
@@ -1649,7 +1691,7 @@ function init() {
     }
     const w = userWires.find(item => item.id === state.selectedWireId);
     if (w) {
-      const text = prompt('请输入线上文字标注 (如: 闭门反馈信号):', w.label || '');
+      const text = prompt('请输入线上文字标注:', w.label || '');
       if (text !== null) {
         w.label = text.trim();
         saveHistorySnapshot();
@@ -1658,7 +1700,6 @@ function init() {
     }
   });
 
-  // 撤销 / 重做 / 删除
   dom.btnUndo.addEventListener('click', undoAction);
   dom.btnRedo.addEventListener('click', redoAction);
   dom.btnDelete.addEventListener('click', deleteSelectedWire);
@@ -1673,12 +1714,10 @@ function init() {
     }
   });
 
-  // 缩放操作
   dom.btnZoomIn.addEventListener('click', () => zoom(1.2));
   dom.btnZoomOut.addEventListener('click', () => zoom(0.83));
   dom.btnZoomReset.addEventListener('click', resetView);
 
-  // 导出
   dom.btnExportPng.addEventListener('click', exportPNG);
   dom.btnExportSvg.addEventListener('click', exportSVG);
 
@@ -1686,7 +1725,6 @@ function init() {
   resetView();
   window.addEventListener('resize', resetView);
 
-  // 初始化历史快照
   saveHistorySnapshot();
 }
 
@@ -1694,3 +1732,8 @@ window.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
+"""
+
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(html_template)
+print("Updated index.html to match exact silk screen wiring!")
