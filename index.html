@@ -4,11 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:,">
-<title>AB 门 (双门联动互锁) 接线示意图 - 在线编辑与预览工坊</title>
+<title>魔点 AB 门 (双门联动互锁) 接线示意图 - 交互编辑与高清查看</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: #0f172a;
+    background: #0b1120;
     color: #f8fafc;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
     display: flex;
@@ -25,7 +25,7 @@
     align-items: center;
     border-bottom: 1px solid #334155;
     z-index: 30;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     gap: 10px;
     flex-wrap: wrap;
   }
@@ -118,1475 +118,1579 @@
     border: 2px solid transparent;
     cursor: pointer;
     transition: transform 0.15s, border-color 0.15s;
-    padding: 0;
   }
   .color-swatch:hover { transform: scale(1.15); }
-  .color-swatch.selected {
-    border-color: #fff;
-    box-shadow: 0 0 0 2px #0ea5e9;
-    transform: scale(1.1);
-  }
-  #custom-color-picker {
-    width: 22px;
-    height: 21px;
-    border: 1px solid #475569;
-    border-radius: 4px;
-    background: transparent;
-    cursor: pointer;
-    padding: 0;
-  }
-  select.tool-select {
-    background: #0f172a;
+  .color-swatch.active { border-color: #ffffff; transform: scale(1.18); box-shadow: 0 0 6px rgba(255,255,255,0.7); }
+
+  .select-styled {
+    background: #1e293b;
     color: #f1f5f9;
     border: 1px solid #475569;
-    border-radius: 5px;
-    padding: 4px 6px;
-    font-size: 12px;
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 11px;
+    cursor: pointer;
     outline: none;
-    cursor: pointer;
   }
-  select.tool-select:focus { border-color: #38bdf8; }
-  .snap-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    color: #cbd5e1;
-    background: #0f172a;
-    padding: 4px 8px;
-    border-radius: 5px;
-    border: 1px solid #475569;
-  }
-  .snap-toggle input { cursor: pointer; accent-color: #0ea5e9; }
 
-  #workspace {
+  main {
     flex: 1;
     position: relative;
     overflow: hidden;
-    background: #090d16;
-  }
-  #viewer-container {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
+    background: #090e17;
     cursor: grab;
   }
-  #viewer-container.drawing-cursor {
-    cursor: crosshair !important;
-  }
-  #svg-wrapper {
+  main.panning { cursor: grabbing; }
+  main.drawing-mode { cursor: crosshair !important; }
+
+  #svg-viewport {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform-origin: center center;
-    transition: transform 0.05s ease-out;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+    will-change: transform;
   }
-  #main-svg {
-    box-shadow: 0 15px 50px rgba(0,0,0,0.7);
-    border-radius: 8px;
-    background: #ffffff;
+  svg {
     display: block;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    background: #ffffff;
   }
 
-  /* 可编辑状态高亮 */
-  .editing text {
-    cursor: move;
-  }
-  .editing text:hover {
-    outline: 2px dashed #0284c7;
-    fill: #0284c7 !important;
-  }
-  .drawing-mode text {
-    pointer-events: none;
-  }
-
-  /* 线条交互样式 */
-  .wire-line, #user-lines-layer path, #user-lines-layer line, #user-lines-layer polyline {
-    cursor: pointer;
-    transition: filter 0.12s;
-  }
-  .editing .wire-line:hover,
-  .editing #user-lines-layer .user-wire-group:hover path,
-  .editing #user-lines-layer .user-wire-group:hover line,
-  .editing #user-lines-layer .user-wire-group:hover polyline {
-    filter: drop-shadow(0 0 4px rgba(14, 165, 233, 0.75));
-  }
-  .selected-wire {
-    filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.95)) !important;
-  }
-
-  .banner-tip {
+  /* 提示条 */
+  .hint-toast {
     position: absolute;
-    top: 12px;
+    bottom: 12px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(15, 23, 42, 0.92);
-    border: 1px solid #0284c7;
-    padding: 6px 18px;
-    border-radius: 20px;
-    font-size: 12px;
-    color: #38bdf8;
-    pointer-events: none;
-    backdrop-filter: blur(6px);
-    z-index: 10;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.35);
-    white-space: nowrap;
-    max-width: 92vw;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .banner-tip.draw-banner {
-    border-color: #f59e0b;
-    color: #fbbf24;
-  }
-
-  /* 浮动在线编辑弹窗 */
-  #text-editor-modal {
-    display: none;
-    position: absolute;
-    z-index: 100;
-    background: #1e293b;
-    border: 1px solid #38bdf8;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  }
-  #text-editor-modal input {
-    background: #0f172a;
-    border: 1px solid #475569;
-    color: #fff;
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-size: 13px;
-    outline: none;
-    width: 240px;
-  }
-  #text-editor-modal button {
-    padding: 6px 10px;
-    margin-left: 6px;
-  }
-
-  /* 底部快捷键提示条 */
-  #shortcut-hint {
-    position: absolute;
-    bottom: 10px;
-    right: 14px;
-    background: rgba(15, 23, 42, 0.85);
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(8px);
     border: 1px solid #334155;
     color: #94a3b8;
+    padding: 5px 14px;
+    border-radius: 20px;
     font-size: 11px;
-    padding: 5px 12px;
-    border-radius: 6px;
-    z-index: 10;
     pointer-events: none;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .hint-toast span.badge {
+    background: #0284c7;
+    color: #fff;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  /* 导线选中手柄样式 */
+  .wire-handle {
+    fill: #0ea5e9;
+    stroke: #ffffff;
+    stroke-width: 1.5;
+    cursor: move;
+  }
+  .snap-indicator {
+    pointer-events: none;
+    fill: none;
+    stroke: #22c55e;
+    stroke-width: 2.5;
+    stroke-dasharray: 3, 2;
+    animation: rotateSnap 3s linear infinite;
+  }
+  @keyframes rotateSnap {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* 可编辑文本样式 */
+  text.editable { cursor: text; transition: opacity 0.15s; }
+  text.editable:hover { opacity: 0.75; fill: #0284c7 !important; }
+  .text-editing-input {
+    position: absolute;
+    z-index: 100;
+    background: #ffffff;
+    color: #0f172a;
+    border: 2px solid #0284c7;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 2px 6px;
+    outline: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
   }
 </style>
 </head>
 <body>
+
 <header>
   <div class="title-group">
     <h1>
       <svg class="icon" style="width:16px;height:16px;stroke:#38bdf8;stroke-width:2;fill:none;" viewBox="0 0 24 24"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7H3l2-4h14l2 4M5 21V10.85M19 21V10.85"/></svg>
-      AB 门接线示意图 · 在线交互工坊
-      <span id="mode-badge" style="font-size:11px; background:#0ea5e9; padding:2px 8px; border-radius:12px; color:#fff;">编辑模式</span>
+      魔点 AB 门 (双门联动互锁) 标准接线拓扑
     </h1>
-    <p>支持在线划线/连线 ｜ 双击文字改字 ｜ 拖拽移动文本与调整端点 ｜ 实时导出高清 PNG/SVG</p>
+    <p>深度参考魔点实物控制器外观 ｜ 支持双击改字 · 自由折线划线 · 端子磁吸 · 40步撤销 · 导出高清工程图</p>
   </div>
+  
   <div class="toolbar">
-    <button id="toggle-edit-btn" onclick="setInteractionMode('edit')" class="active" title="选择/移动/双击修改文字与线条">
-      <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> 编辑/选择
+    <button id="btn-draw-mode" class="draw-active" title="切换划线/连线模式">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+      <span id="draw-mode-label">正在划线 (点击/拖拽)</span>
     </button>
-    <button id="toggle-draw-btn" onclick="setInteractionMode('draw')" title="在图上点击或拖拽绘制接线/互锁连线">
-      <svg class="icon" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 6h5v12h5"/></svg> 划线/连线
-    </button>
-    <button id="toggle-view-btn" onclick="setInteractionMode('view')" title="纯浏览平移模式">
-      <svg class="icon" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg> 浏览模式
+    <button id="btn-select-mode" title="选择与调整现有导线/文字">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M3 3l7 18 3-7 7-3L3 3z"/></svg>
+      编辑/选择
     </button>
     <div class="divider"></div>
-    <button onclick="addCustomText()" title="在画布中添加自定义文字标注">＋ 添加文本</button>
-    <button id="undo-btn" onclick="undoAction()" disabled title="撤销上一步操作 (Ctrl+Z)">↩ 撤销</button>
-    <button id="redo-btn" onclick="redoAction()" disabled title="重做操作 (Ctrl+Y)">↪ 重做</button>
-    <div class="divider"></div>
-    <button onclick="zoomIn()" title="放大画布">＋ 放大</button>
-    <button onclick="zoomOut()" title="缩小画布">－ 缩小</button>
-    <button onclick="resetZoom()" title="复位视图缩放与位置">↺ 复位</button>
-    <div class="divider"></div>
-    <button onclick="exportPNG()" class="btn-green">
-      <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg> 导出修改后的图片
+    <button id="btn-undo" title="撤销操作 (Ctrl+Z)" disabled>
+      <svg class="icon" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></svg>
+      撤销
     </button>
-    <button onclick="exportSVG()" class="btn-blue">
-      <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> 导出矢量 SVG
+    <button id="btn-redo" title="重做操作 (Ctrl+Y)" disabled>
+      <svg class="icon" viewBox="0 0 24 24"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/></svg>
+      重做
     </button>
-    <a href="https://apan.arikacips.cyou/dav/google%20ar1kka/little%20meow/AB_Door_Interlock_Wiring_Diagram.dxf" download class="btn">
-      <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> 原版 CAD (.dxf)
-    </a>
+    <button id="btn-delete-selected" class="btn-danger" title="删除当前选中的连线或标注" disabled>
+      <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/></svg>
+      删除选中
+    </button>
+    <button id="btn-clear-user-lines" title="清空全部自定义划线">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M10 11v6M14 11v6"/></svg>
+      清空新增线
+    </button>
+    <div class="divider"></div>
+    <button id="btn-zoom-in" title="放大 (+)">＋ 放大</button>
+    <button id="btn-zoom-out" title="缩小 (-)">－ 缩小</button>
+    <button id="btn-zoom-reset" title="复位视图 (100%)">⟲ 适应</button>
+    <div class="divider"></div>
+    <button id="btn-export-png" class="btn-green" title="导出 2x 超高清 PNG 接线图">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      导出高清 PNG
+    </button>
+    <button id="btn-export-svg" class="btn-blue" title="导出矢量 SVG 文件">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      导出矢量 SVG
+    </button>
   </div>
 </header>
 
-<!-- 划线与线条编辑属性栏 -->
+<!-- 二级划线属性与走线工具栏 -->
 <div id="draw-toolbar">
   <div class="tool-section">
-    <span class="tool-label">走线：</span>
-    <button id="route-orthogonal" class="route-btn active" onclick="setRouteType('orthogonal')" title="自动直角折线 (适合端子接线)">↱ 直角折线</button>
-    <button id="route-straight" class="route-btn" onclick="setRouteType('straight')" title="两点直接连线">╱ 直线</button>
-    <button id="route-polyline" class="route-btn" onclick="setRouteType('polyline')" title="连续点击绘制多拐点折线，双击或按回车完成">⟿ 多段折线</button>
-
-    <div class="divider"></div>
-    <span class="tool-label">颜色：</span>
-    <button class="color-swatch selected" style="background:#dc2626;" data-color="#dc2626" onclick="selectWireColor('#dc2626', this)" title="电源正极红 (#dc2626)"></button>
-    <button class="color-swatch" style="background:#64748b;" data-color="#64748b" onclick="selectWireColor('#64748b', this)" title="公共端GND灰 (#64748b)"></button>
-    <button class="color-swatch" style="background:#16a34a;" data-color="#16a34a" onclick="selectWireColor('#16a34a', this)" title="开门信号绿 (#16a34a)"></button>
-    <button class="color-swatch" style="background:#0284c7;" data-color="#0284c7" onclick="selectWireColor('#0284c7', this)" title="互锁联动蓝 (#0284c7)"></button>
-    <button class="color-swatch" style="background:#f97316;" data-color="#f97316" onclick="selectWireColor('#f97316', this)" title="RS485-A橙 (#f97316)"></button>
-    <button class="color-swatch" style="background:#9333ea;" data-color="#9333ea" onclick="selectWireColor('#9333ea', this)" title="RS485-B紫 (#9333ea)"></button>
-    <button class="color-swatch" style="background:#0f172a;" data-color="#0f172a" onclick="selectWireColor('#0f172a', this)" title="深黑 (#0f172a)"></button>
-    <input type="color" id="custom-color-picker" value="#dc2626" onchange="selectWireColor(this.value, null)" title="自定义线条颜色">
-
-    <div class="divider"></div>
-    <span class="tool-label">粗细：</span>
-    <select id="wire-width-select" class="tool-select" onchange="updateSelectedWireStyle()">
-      <option value="1.5">1.5 px (细)</option>
-      <option value="2" selected>2.0 px (标准)</option>
-      <option value="2.8">2.8 px (加粗)</option>
-      <option value="4">4.0 px (主干)</option>
+    <span class="tool-label">走线模式:</span>
+    <select id="line-mode-select" class="select-styled">
+      <option value="orthogonal" selected>↱ 直角折线 (电气规范推荐)</option>
+      <option value="straight">╱ 直线 (按住 Shift 水平/垂直)</option>
+      <option value="polyline">⟿ 多段连续折线 (双击/Enter结束)</option>
     </select>
-
-    <span class="tool-label">样式：</span>
-    <select id="wire-dash-select" class="tool-select" onchange="updateSelectedWireStyle()">
-      <option value="none" selected>─── 实线</option>
-      <option value="7,5">- - - 虚线</option>
-      <option value="2,4">······ 点线</option>
-    </select>
-
-    <span class="tool-label">端点：</span>
-    <select id="wire-marker-select" class="tool-select" onchange="updateSelectedWireStyle()">
-      <option value="dots" selected>●─● 两端接线点</option>
-      <option value="arrow-end">──► 单向箭头</option>
-      <option value="arrow-both">◄─► 双向箭头</option>
-      <option value="none">─── 无端点</option>
-    </select>
-
-    <label class="snap-toggle" title="靠近端子或节点时自动吸附对齐">
-      <input type="checkbox" id="snap-checkbox" checked> 端子吸附
-    </label>
   </div>
 
   <div class="tool-section">
-    <button id="add-wire-label-btn" onclick="addLabelToSelectedWire()" disabled title="为当前选中的线条添加文字说明">＋ 线上加字</button>
-    <button id="delete-selected-btn" onclick="deleteSelectedElement()" class="btn-danger" disabled title="删除当前选中的线条或文字 (Delete / Backspace)">✕ 删除选中</button>
-    <button onclick="clearUserWires()" title="清空所有新增的自定义线条">↺ 清空新增线</button>
+    <span class="tool-label">导线类型/颜色:</span>
+    <div class="color-swatch active" data-color="#dc2626" style="background:#dc2626;" title="电源 +12V (正极红)"></div>
+    <div class="color-swatch" data-color="#475569" style="background:#475569;" title="公共端 GND (接地深灰)"></div>
+    <div class="color-swatch" data-color="#16a34a" style="background:#16a34a;" title="开门信号线 (触发绿)"></div>
+    <div class="color-swatch" data-color="#0284c7" style="background:#0284c7;" title="锁控输出 L+/门磁回路 (互锁蓝)"></div>
+    <div class="color-swatch" data-color="#f97316" style="background:#f97316;" title="RS485-A (橙色通讯线)"></div>
+    <div class="color-swatch" data-color="#9333ea" style="background:#9333ea;" title="RS485-B (紫色通讯线)"></div>
+    <div class="color-swatch" data-color="#0f172a" style="background:#0f172a;" title="信号/控制黑线"></div>
+    <input type="color" id="custom-color-picker" value="#dc2626" style="width:24px;height:24px;border:none;background:none;cursor:pointer;" title="自定义颜色">
+  </div>
+
+  <div class="tool-section">
+    <span class="tool-label">线宽:</span>
+    <select id="line-width-select" class="select-styled">
+      <option value="1.5">1.5px (标准信号细线)</option>
+      <option value="2.2" selected>2.2px (主干回路推荐)</option>
+      <option value="3.0">3.0px (粗线)</option>
+      <option value="4.0">4.0px (特粗主电源)</option>
+    </select>
+  </div>
+
+  <div class="tool-section">
+    <span class="tool-label">线型:</span>
+    <select id="line-dash-select" class="select-styled">
+      <option value="solid" selected>── 实线</option>
+      <option value="dashed">╌╌ 虚线 (4, 4)</option>
+      <option value="dotted">···· 点线 (2, 3)</option>
+    </select>
+  </div>
+
+  <div class="tool-section">
+    <span class="tool-label">端点样式:</span>
+    <select id="line-arrow-select" class="select-styled">
+      <option value="dot" selected>● 接线圆点 (端子连接)</option>
+      <option value="end-arrow">➔ 终点箭头 (信号流向)</option>
+      <option value="both-arrow">⇄ 双向箭头 (互锁/总线)</option>
+      <option value="none">─ 无端点 (纯导线)</option>
+    </select>
+  </div>
+
+  <div class="tool-section">
+    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;">
+      <input type="checkbox" id="snap-to-terminals" checked>
+      端子智能磁吸
+    </label>
+    <button id="btn-add-line-label" style="padding:2px 7px;font-size:11px;" title="为选中的导线添加居中文本标注">+ 线上加字</button>
   </div>
 </div>
 
-<div id="workspace">
-  <div class="banner-tip" id="status-tip">当前为【编辑模式】：双击文字可修改内容，点击线条可选中改色/删线，点击顶部【划线/连线】即可在任意位置画线！</div>
+<main id="canvas-container">
+  <div id="svg-viewport">
+    <svg id="main-svg" width="1400" height="920" viewBox="0 0 1400 920" xmlns="http://www.w3.org/2000/svg">
+      <defs id="svg-defs">
+        <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+          <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.08"/>
+        </filter>
+        <filter id="controller-shadow" x="-10%" y="-5%" width="120%" height="112%">
+          <feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity="0.22"/>
+        </filter>
+        <linearGradient id="controller-body-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#242b38"/>
+          <stop offset="50%" stop-color="#181e28"/>
+          <stop offset="100%" stop-color="#12161f"/>
+        </linearGradient>
+        <linearGradient id="terminal-green-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#22c55e"/>
+          <stop offset="100%" stop-color="#15803d"/>
+        </linearGradient>
+      </defs>
 
-  <div id="viewer-container">
-    <div id="svg-wrapper" class="editing">
-      <!-- 完整矢量接线图 -->
-      <svg id="main-svg" width="1280" height="780" viewBox="0 0 1280 780" xmlns="http://www.w3.org/2000/svg">
-        <defs id="svg-defs">
-          <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
-            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.08"/>
-          </filter>
-        </defs>
+      <!-- 画布纯白底 -->
+      <rect id="bg-rect" width="1400" height="920" fill="#ffffff"/>
+
+      <!-- 顶头标题与技术说明 -->
+      <text class="editable" x="700" y="40" font-size="22" font-weight="bold" fill="#0f172a" text-anchor="middle" font-family="'PingFang SC', 'Microsoft YaHei', sans-serif">魔点 AB 门 (双门联动互锁) 接线示意图</text>
+      <text class="editable" x="700" y="65" font-size="12" fill="#64748b" text-anchor="middle">魔点 AB 门互锁控制器 ｜ 双门联动互锁标准工程接线 ｜ 门禁设备×2 · 电锁×2 · 开门按钮×2 · 12V2A电源×2 · 摄像机×1</text>
+
+      <!-- ==================== 1. 设备外框层 ==================== -->
+      <g id="device-boxes-group">
+        <!-- 内门侧设备 -->
+        <!-- 内门电锁 -->
+        <rect x="50" y="95" width="250" height="140" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="2" filter="url(#shadow)"/>
+        <path d="M 50 125 L 300 125" stroke="#e0f2fe" stroke-width="1"/>
+        <rect x="50" y="95" width="250" height="30" rx="8" fill="#f0f9ff"/>
+        <rect x="50" y="115" width="250" height="10" fill="#f0f9ff"/>
+
+        <!-- 内门开门按钮 -->
+        <rect x="50" y="265" width="250" height="85" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="2" filter="url(#shadow)"/>
+        <rect x="50" y="265" width="250" height="28" rx="8" fill="#f0fdf4"/>
+        <rect x="50" y="283" width="250" height="10" fill="#f0fdf4"/>
+
+        <!-- 内门 12V2A 电源 -->
+        <rect x="50" y="380" width="250" height="75" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="2" filter="url(#shadow)"/>
+        <rect x="50" y="380" width="250" height="26" rx="8" fill="#fef2f2"/>
+        <rect x="50" y="396" width="250" height="10" fill="#fef2f2"/>
+
+        <!-- 内门门禁设备 -->
+        <rect x="50" y="485" width="250" height="155" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2" filter="url(#shadow)"/>
+        <rect x="50" y="485" width="250" height="28" rx="8" fill="#eef2ff"/>
+        <rect x="50" y="503" width="250" height="10" fill="#eef2ff"/>
+
+        <!-- ==================== 中间：魔点 AB 门互锁控制器 (拟真机体) ==================== -->
+        <!-- 控制器主体黑色外壳 -->
+        <rect x="490" y="90" width="420" height="575" rx="12" fill="url(#controller-body-grad)" stroke="#090d14" stroke-width="3" filter="url(#controller-shadow)"/>
+        <rect x="498" y="98" width="404" height="559" rx="8" fill="none" stroke="#334155" stroke-width="1.2" stroke-dasharray="8, 4"/>
         
-        <!-- 背景白底 -->
-        <rect id="bg-rect" width="1280" height="780" fill="#ffffff"/>
-        
-        <!-- 标题 -->
-        <text class="editable" x="640" y="45" font-size="22" font-weight="bold" fill="#0f172a" text-anchor="middle" font-family="'PingFang SC', 'Microsoft YaHei', sans-serif">AB 门 (双门联动互锁) 接线示意图</text>
-        <text class="editable" x="640" y="72" font-size="12" fill="#64748b" text-anchor="middle">联动门控制主机 BJRANDE-760 ｜ 内门 / 外门双通道 ｜ 门禁设备×2 · 开门按钮×2 · 电锁×2 · 12V2A 电源×2 · 摄像头×1</text>
-        
-        <!-- 设备框 -->
-        <g id="device-boxes" stroke="#334155" stroke-width="1.2" fill="#f8fafc" rx="6" filter="url(#shadow)">
-          <rect x="40" y="95" width="240" height="150" rx="6"/>
-          <rect x="1000" y="95" width="240" height="150" rx="6"/>
-          <rect x="420" y="95" width="440" height="175" rx="6"/>
-          <rect x="40" y="275" width="240" height="95" rx="6"/>
-          <rect x="1000" y="275" width="240" height="95" rx="6"/>
-          <rect x="40" y="400" width="240" height="75" rx="6"/>
-          <rect x="1000" y="400" width="240" height="75" rx="6"/>
-          <rect x="40" y="505" width="240" height="145" rx="6"/>
-          <rect x="1000" y="505" width="240" height="145" rx="6"/>
-          <rect x="540" y="660" width="200" height="50" rx="6"/>
-        </g>
-        
-        <!-- 设备标题文本 (可双击编辑) -->
-        <g font-family="'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#0f172a">
-          <text class="editable" x="160" y="122" text-anchor="middle">电锁 (磁力锁) — 内门</text>
-          <text class="editable" x="1120" y="122" text-anchor="middle">电锁 (磁力锁) — 外门</text>
-          <text class="editable" x="640" y="120" text-anchor="middle" font-size="15">联动门控制主机</text>
-          <text class="editable" x="640" y="138" text-anchor="middle" font-size="11" font-weight="normal" fill="#64748b">BJRANDE-760 (双门联动互锁)</text>
-          <text class="editable" x="160" y="302" text-anchor="middle">开门按钮 — 内门</text>
-          <text class="editable" x="1120" y="302" text-anchor="middle">开门按钮 — 外门</text>
-          <text class="editable" x="160" y="426" text-anchor="middle">12V2A 电源适配器 — 内门</text>
-          <text class="editable" x="1120" y="426" text-anchor="middle">12V2A 电源适配器 — 外门</text>
-          <text class="editable" x="160" y="530" text-anchor="middle">门禁设备 — 内门</text>
-          <text class="editable" x="1120" y="530" text-anchor="middle">门禁设备 — 外门</text>
-          <text class="editable" x="640" y="682" text-anchor="middle">摄像头</text>
-        </g>
-        
-        <!-- 端子文字 (可编辑) -->
-        <g font-family="Consolas, monospace" font-size="11" fill="#475569">
-          <!-- 内门电锁端子 -->
-          <text class="editable" x="250" y="153" text-anchor="end">12V+</text>
-          <text class="editable" x="250" y="178" text-anchor="end">12V-</text>
-          <text class="editable" x="250" y="203" text-anchor="end">COM</text>
-          <text class="editable" x="250" y="228" text-anchor="end">NO</text>
-          
-          <!-- 外门电锁端子 -->
-          <text class="editable" x="1030" y="153">12V+</text>
-          <text class="editable" x="1030" y="178">12V-</text>
-          <text class="editable" x="1030" y="203">COM</text>
-          <text class="editable" x="1030" y="228">NO</text>
-          
-          <!-- 主机内门端子 -->
-          <text class="editable" x="445" y="153">内门锁 L+</text>
-          <text class="editable" x="445" y="178">内门锁 GND</text>
-          <text class="editable" x="445" y="203">内门锁 M+</text>
-          <text class="editable" x="445" y="228">内门锁 GND</text>
-          
-          <!-- 主机外门端子 -->
-          <text class="editable" x="835" y="153" text-anchor="end">外门锁 L+</text>
-          <text class="editable" x="835" y="178" text-anchor="end">外门锁 GND</text>
-          <text class="editable" x="835" y="203" text-anchor="end">外门锁 M+</text>
-          <text class="editable" x="835" y="228" text-anchor="end">外门锁 GND</text>
-          
-          <!-- 开门按钮端子 -->
-          <text class="editable" x="250" y="328" text-anchor="end">COM</text>
-          <text class="editable" x="250" y="353" text-anchor="end">NO</text>
-          <text class="editable" x="1030" y="328">COM</text>
-          <text class="editable" x="1030" y="353">NO</text>
-          
-          <!-- 主机按钮公共端 -->
-          <text class="editable" x="445" y="328">GND (公共)</text>
-          <text class="editable" x="835" y="328" text-anchor="end">GND (公共)</text>
-          
-          <!-- 电源适配器端子 -->
-          <text class="editable" x="85" y="455">+12V</text>
-          <text class="editable" x="215" y="455">GND</text>
-          <text class="editable" x="1045" y="455">+12V</text>
-          <text class="editable" x="1175" y="455">GND</text>
-          
-          <!-- 门禁设备端子 -->
-          <text class="editable" x="85" y="560">+12V</text>
-          <text class="editable" x="215" y="560">GND</text>
-          <text class="editable" x="250" y="590" text-anchor="end">NO</text>
-          <text class="editable" x="250" y="618" text-anchor="end">COM</text>
-          <text class="editable" x="95" y="635">485A</text>
-          <text class="editable" x="175" y="635">485B</text>
-          
-          <text class="editable" x="1045" y="560">+12V</text>
-          <text class="editable" x="1175" y="560">GND</text>
-          <text class="editable" x="1030" y="590">NO</text>
-          <text class="editable" x="1030" y="618">COM</text>
-          <text class="editable" x="1055" y="635">485A</text>
-          <text class="editable" x="1135" y="635">485B</text>
-          
-          <!-- 摄像头端子 -->
-          <text class="editable" x="590" y="698">485A</text>
-          <text class="editable" x="670" y="698">485B</text>
-          
-          <!-- 主机底部端子 -->
-          <text class="editable" x="475" y="255" text-anchor="middle">公共端 GND</text>
-          <text class="editable" x="545" y="255" text-anchor="middle">按钮 (内门)</text>
-          <text class="editable" x="735" y="255" text-anchor="middle">按钮 (外门)</text>
-          <text class="editable" x="805" y="255" text-anchor="middle">公共端 GND</text>
-        </g>
-        
-        <!-- 预设导线层 (支持点击选中编辑或删除) -->
-        <g id="preset-wires">
-          <g stroke-width="1.8">
-            <line class="wire-line" x1="260" y1="150" x2="435" y2="150" stroke="#dc2626"/>
-            <line class="wire-line" x1="260" y1="175" x2="435" y2="175" stroke="#64748b"/>
-            <line class="wire-line" x1="260" y1="200" x2="435" y2="200" stroke="#dc2626"/>
-            <line class="wire-line" x1="260" y1="225" x2="435" y2="225" stroke="#64748b"/>
-            
-            <line class="wire-line" x1="845" y1="150" x2="1020" y2="150" stroke="#dc2626"/>
-            <line class="wire-line" x1="845" y1="175" x2="1020" y2="175" stroke="#64748b"/>
-            <line class="wire-line" x1="845" y1="200" x2="1020" y2="200" stroke="#dc2626"/>
-            <line class="wire-line" x1="845" y1="225" x2="1020" y2="225" stroke="#64748b"/>
-            
-            <line class="wire-line" x1="260" y1="325" x2="435" y2="325" stroke="#64748b"/>
-            <line class="wire-line" x1="845" y1="325" x2="1020" y2="325" stroke="#64748b"/>
-          </g>
-          
-          <!-- 开门信号线 (绿色 #16a34a) -->
-          <g stroke="#16a34a" stroke-width="2" fill="none">
-            <path class="wire-line" d="M 260 350 L 300 350 L 300 586 L 260 586"/>
-            <path class="wire-line" d="M 300 520 L 545 520 L 545 270"/>
-            <path class="wire-line" d="M 1020 350 L 980 350 L 980 586 L 1020 586"/>
-            <path class="wire-line" d="M 980 520 L 735 520 L 735 270"/>
-          </g>
-          
-          <!-- 门禁 COM 接公共端 GND (灰色) -->
-          <g stroke="#64748b" stroke-width="1.8" fill="none">
-            <path class="wire-line" d="M 260 615 L 360 615 L 360 550 L 475 550 L 475 270"/>
-            <path class="wire-line" d="M 1020 615 L 920 615 L 920 550 L 805 550 L 805 270"/>
-          </g>
-          
-          <!-- RS485 总线 -->
-          <g stroke-width="2.2" fill="none">
-            <path class="wire-line" d="M 110 645 L 110 740 L 1070 740 L 1070 645" stroke="#f97316"/>
-            <path class="wire-line" d="M 605 705 L 605 740" stroke="#f97316"/>
-            <path class="wire-line" d="M 190 645 L 190 755 L 1150 755 L 1150 645" stroke="#9333ea"/>
-            <path class="wire-line" d="M 685 705 L 685 755" stroke="#9333ea"/>
-          </g>
-        </g>
-        
-        <!-- 导线文字标注 (可编辑) -->
-        <g font-family="'PingFang SC', sans-serif" font-size="10" fill="#dc2626" text-anchor="middle">
-          <text class="editable" x="345" y="145">内门锁 L+ → 电锁 12V+</text>
-          <text class="editable" x="345" y="195">内门锁 M+ → 电锁 COM</text>
-          <text class="editable" x="935" y="145">外门锁 L+ → 电锁 12V+</text>
-          <text class="editable" x="935" y="195">外门锁 M+ → 电锁 COM</text>
-        </g>
-        <g font-family="'PingFang SC', sans-serif" font-size="10" fill="#64748b" text-anchor="middle">
-          <text class="editable" x="345" y="170">内门锁 GND → 电锁 12V-</text>
-          <text class="editable" x="345" y="220">内门锁 GND → 电锁 NO</text>
-          <text class="editable" x="935" y="170">外门锁 GND → 电锁 12V-</text>
-          <text class="editable" x="935" y="220">外门锁 GND → 电锁 NO</text>
-          <text class="editable" x="345" y="320">按钮 COM → 公共端 GND</text>
-          <text class="editable" x="935" y="320">按钮 COM → 公共端 GND</text>
-        </g>
-        <g font-family="'PingFang SC', sans-serif" font-size="10" fill="#16a34a">
-          <text class="editable" x="375" y="513">门禁设备 NO → 按钮 (内门)</text>
-          <text class="editable" x="815" y="513">门禁设备 NO → 按钮 (外门)</text>
-        </g>
-        <g font-family="'PingFang SC', sans-serif" font-size="10" fill="#64748b">
-          <text class="editable" x="385" y="543">门禁设备 COM → 公共端 GND</text>
-          <text class="editable" x="825" y="543">门禁设备 COM → 公共端 GND</text>
-        </g>
-        <text class="editable" x="640" y="733" font-family="'PingFang SC', sans-serif" font-size="11" fill="#ea580c" text-anchor="middle">RS-485 通讯总线 (A 接 A、B 接 B，双绞屏蔽线，屏蔽层单端接地)</text>
-        
-        <!-- 节点实心圆圈 (端子吸附点) -->
-        <g id="terminal-nodes" fill="#0f172a">
-          <circle cx="260" cy="150" r="3"/><circle cx="260" cy="175" r="3"/><circle cx="260" cy="200" r="3"/><circle cx="260" cy="225" r="3"/>
-          <circle cx="435" cy="150" r="3"/><circle cx="435" cy="175" r="3"/><circle cx="435" cy="200" r="3"/><circle cx="435" cy="225" r="3"/>
-          <circle cx="1020" cy="150" r="3"/><circle cx="1020" cy="175" r="3"/><circle cx="1020" cy="200" r="3"/><circle cx="1020" cy="225" r="3"/>
-          <circle cx="845" cy="150" r="3"/><circle cx="845" cy="175" r="3"/><circle cx="845" cy="200" r="3"/><circle cx="845" cy="225" r="3"/>
-          <circle cx="260" cy="325" r="3"/><circle cx="260" cy="350" r="3"/><circle cx="435" cy="325" r="3"/>
-          <circle cx="1020" cy="325" r="3"/><circle cx="1020" cy="350" r="3"/><circle cx="845" cy="325" r="3"/>
-          <!-- 12V2A 电源适配器与门禁电源端子节点 -->
-          <circle cx="95" cy="462" r="3"/><circle cx="222" cy="462" r="3"/>
-          <circle cx="1055" cy="462" r="3"/><circle cx="1182" cy="462" r="3"/>
-          <circle cx="95" cy="545" r="3"/><circle cx="222" cy="545" r="3"/>
-          <circle cx="1055" cy="545" r="3"/><circle cx="1182" cy="545" r="3"/>
-          <circle cx="260" cy="586" r="3"/><circle cx="260" cy="615" r="3"/>
-          <circle cx="1020" cy="586" r="3"/><circle cx="1020" cy="615" r="3"/>
-          <circle cx="110" cy="645" r="3"/><circle cx="190" cy="645" r="3"/>
-          <circle cx="1070" cy="645" r="3"/><circle cx="1150" cy="645" r="3"/>
-          <circle cx="605" cy="705" r="3"/><circle cx="685" cy="705" r="3"/>
-          <circle cx="475" cy="270" r="3"/><circle cx="545" cy="270" r="3"/><circle cx="735" cy="270" r="3"/><circle cx="805" cy="270" r="3"/>
-          <circle cx="300" cy="520" r="4.5" fill="#16a34a"/>
-          <circle cx="980" cy="520" r="4.5" fill="#16a34a"/>
-          <circle cx="605" cy="740" r="4" fill="#f97316"/>
-          <circle cx="685" cy="755" r="4" fill="#9333ea"/>
+        <!-- 左侧突出绿色接线端子排 (内门锁/外门锁/照明/电源) -->
+        <!-- 内门锁端子排 (5P) -->
+        <rect x="466" y="118" width="24" height="118" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
+        <!-- 外门锁端子排 (5P) -->
+        <rect x="466" y="258" width="24" height="118" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
+        <!-- 照明端子排 (2P) -->
+        <rect x="466" y="408" width="24" height="48" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
+        <!-- 电源端子排 (2P) -->
+        <rect x="466" y="488" width="24" height="48" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
+
+        <!-- 右侧突出绿色接线端子排 (内门读卡/外门读卡/室内操作键盘) -->
+        <!-- 内门读卡端子排 (4P) -->
+        <rect x="910" y="118" width="24" height="98" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
+        <!-- 外门读卡端子排 (4P) -->
+        <rect x="910" y="248" width="24" height="98" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
+        <!-- 室内操作键盘端子排 (6P) -->
+        <rect x="910" y="378" width="24" height="148" rx="3" fill="url(#terminal-green-grad)" stroke="#0f172a" stroke-width="1.2"/>
+
+        <!-- 控制器内部精细组件: 喇叭蜂鸣器孔阵列 (拟真实物) -->
+        <g id="speaker-grill" transform="translate(640, 520)">
+          <!-- 八边形/同心圆微孔阵列 -->
+          <circle cx="60" cy="50" r="58" fill="#111620" stroke="#334155" stroke-width="1.5"/>
+          <!-- 孔阵 (使用循环分布的小孔) -->
+          <!-- 中心孔与同心环孔 -->
+          <circle cx="60" cy="50" r="3.2" fill="#070a0f"/>
+          <!-- 环1 r=14 -->
+          <circle cx="60" cy="36" r="2.8" fill="#070a0f"/><circle cx="60" cy="64" r="2.8" fill="#070a0f"/>
+          <circle cx="46" cy="50" r="2.8" fill="#070a0f"/><circle cx="74" cy="50" r="2.8" fill="#070a0f"/>
+          <circle cx="50" cy="40" r="2.8" fill="#070a0f"/><circle cx="70" cy="40" r="2.8" fill="#070a0f"/>
+          <circle cx="50" cy="60" r="2.8" fill="#070a0f"/><circle cx="70" cy="60" r="2.8" fill="#070a0f"/>
+          <!-- 环2 r=28 -->
+          <circle cx="60" cy="22" r="2.8" fill="#070a0f"/><circle cx="60" cy="78" r="2.8" fill="#070a0f"/>
+          <circle cx="32" cy="50" r="2.8" fill="#070a0f"/><circle cx="88" cy="50" r="2.8" fill="#070a0f"/>
+          <circle cx="40" cy="30" r="2.8" fill="#070a0f"/><circle cx="80" cy="30" r="2.8" fill="#070a0f"/>
+          <circle cx="40" cy="70" r="2.8" fill="#070a0f"/><circle cx="80" cy="70" r="2.8" fill="#070a0f"/>
+          <!-- 环3 r=42 -->
+          <circle cx="60" cy="8" r="2.8" fill="#070a0f"/><circle cx="60" cy="92" r="2.8" fill="#070a0f"/>
+          <circle cx="18" cy="50" r="2.8" fill="#070a0f"/><circle cx="102" cy="50" r="2.8" fill="#070a0f"/>
+          <circle cx="30" cy="20" r="2.8" fill="#070a0f"/><circle cx="90" cy="20" r="2.8" fill="#070a0f"/>
+          <circle cx="30" cy="80" r="2.8" fill="#070a0f"/><circle cx="90" cy="80" r="2.8" fill="#070a0f"/>
         </g>
 
-        <!-- 用户新增连线与标注图层 -->
-        <g id="user-lines-layer"></g>
-        <g id="user-texts-layer"></g>
+        <!-- 拨码开关面板 (实物复刻) -->
+        <rect x="652" y="225" width="138" height="120" rx="4" fill="#131923" stroke="#475569" stroke-width="1"/>
+        <rect x="660" y="275" width="56" height="28" rx="2" fill="#991b1b" stroke="#7f1d1d" stroke-width="1"/>
+        <!-- 4位白色开关滑块 -->
+        <rect x="664" y="278" width="8" height="10" fill="#f8fafc" rx="1"/>
+        <rect x="677" y="278" width="8" height="10" fill="#f8fafc" rx="1"/>
+        <rect x="690" y="290" width="8" height="10" fill="#f8fafc" rx="1"/>
+        <rect x="703" y="290" width="8" height="10" fill="#f8fafc" rx="1"/>
 
-        <!-- 交互辅助层 (导出时自动隐藏) -->
-        <g id="interaction-overlay" pointer-events="none">
-          <circle id="snap-indicator" cx="-100" cy="-100" r="7" fill="rgba(14, 165, 233, 0.2)" stroke="#0ea5e9" stroke-width="2" display="none"/>
-          <path id="preview-wire" d="" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="5,4" display="none"/>
-          <circle id="preview-start-dot" cx="-100" cy="-100" r="4" fill="#dc2626" display="none"/>
-          <circle id="preview-end-dot" cx="-100" cy="-100" r="4" fill="#dc2626" display="none"/>
-          <g id="selection-handles"></g>
+        <!-- 音量旋钮面板 (实物复刻) -->
+        <circle cx="760" cy="405" r="18" fill="#334155" stroke="#64748b" stroke-width="1.5"/>
+        <circle cx="760" cy="405" r="14" fill="#1e293b"/>
+        <line x1="760" y1="394" x2="760" y2="400" stroke="#f8fafc" stroke-width="2"/>
+        <!-- +12V 电源指示灯/微调孔 -->
+        <circle cx="678" cy="405" r="5" fill="#22c55e" stroke="#16a34a" stroke-width="1"/>
+        <circle cx="678" cy="405" r="9" fill="none" stroke="#22c55e" stroke-width="0.8" opacity="0.6"/>
+
+        <!-- 外门侧设备 -->
+        <!-- 外门电锁 -->
+        <rect x="1100" y="95" width="250" height="140" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="2" filter="url(#shadow)"/>
+        <rect x="1100" y="95" width="250" height="30" rx="8" fill="#f0f9ff"/>
+        <rect x="1100" y="115" width="250" height="10" fill="#f0f9ff"/>
+
+        <!-- 外门开门按钮 -->
+        <rect x="1100" y="265" width="250" height="85" rx="8" fill="#ffffff" stroke="#16a34a" stroke-width="2" filter="url(#shadow)"/>
+        <rect x="1100" y="265" width="250" height="28" rx="8" fill="#f0fdf4"/>
+        <rect x="1100" y="283" width="250" height="10" fill="#f0fdf4"/>
+
+        <!-- 外门 12V2A 电源 -->
+        <rect x="1100" y="380" width="250" height="75" rx="8" fill="#ffffff" stroke="#dc2626" stroke-width="2" filter="url(#shadow)"/>
+        <rect x="1100" y="380" width="250" height="26" rx="8" fill="#fef2f2"/>
+        <rect x="1100" y="396" width="250" height="10" fill="#fef2f2"/>
+
+        <!-- 外门门禁设备 -->
+        <rect x="1100" y="485" width="250" height="155" rx="8" fill="#ffffff" stroke="#4f46e5" stroke-width="2" filter="url(#shadow)"/>
+        <rect x="1100" y="485" width="250" height="28" rx="8" fill="#eef2ff"/>
+        <rect x="1100" y="503" width="250" height="10" fill="#eef2ff"/>
+
+        <!-- 底部联动摄像头 -->
+        <rect x="600" y="685" width="200" height="48" rx="8" fill="#ffffff" stroke="#9333ea" stroke-width="1.8" filter="url(#shadow)"/>
+        <rect x="600" y="685" width="200" height="22" rx="8" fill="#faf5ff"/>
+        <rect x="600" y="697" width="200" height="10" fill="#faf5ff"/>
+      </g>
+
+      <!-- ==================== 2. 设备名称与丝印文字 ==================== -->
+      <g font-family="'PingFang SC', 'Microsoft YaHei', sans-serif">
+        <!-- 内门侧标题 -->
+        <text class="editable" x="175" y="116" font-size="14" font-weight="bold" fill="#0369a1" text-anchor="middle">电锁 (磁力锁) — 内门</text>
+        <text class="editable" x="175" y="284" font-size="14" font-weight="bold" fill="#15803d" text-anchor="middle">开门按钮 — 内门</text>
+        <text class="editable" x="175" y="398" font-size="13" font-weight="bold" fill="#b91c1c" text-anchor="middle">12V2A 电源适配器 — 内门</text>
+        <text class="editable" x="175" y="504" font-size="14" font-weight="bold" fill="#4338ca" text-anchor="middle">门禁设备 — 内门 (人脸/刷卡)</text>
+
+        <!-- 外门侧标题 -->
+        <text class="editable" x="1225" y="116" font-size="14" font-weight="bold" fill="#0369a1" text-anchor="middle">电锁 (磁力锁) — 外门</text>
+        <text class="editable" x="1225" y="284" font-size="14" font-weight="bold" fill="#15803d" text-anchor="middle">开门按钮 — 外门</text>
+        <text class="editable" x="1225" y="398" font-size="13" font-weight="bold" fill="#b91c1c" text-anchor="middle">12V2A 电源适配器 — 外门</text>
+        <text class="editable" x="1225" y="504" font-size="14" font-weight="bold" fill="#4338ca" text-anchor="middle">门禁设备 — 外门 (人脸/刷卡)</text>
+
+        <!-- 摄像头标题 -->
+        <text class="editable" x="700" y="702" font-size="13" font-weight="bold" fill="#7e22ce" text-anchor="middle">联动摄像机 (485抓拍联动)</text>
+
+        <!-- 魔点控制器面板印刷 (完全复刻实物) -->
+        <text class="editable" x="650" y="145" font-size="20" font-weight="bold" fill="#ffffff" letter-spacing="4">魔点AB门互锁控制器</text>
+        <text class="editable" x="650" y="168" font-size="10" fill="#94a3b8">双门状态互锁判定核心 · 硬件级互锁</text>
+
+        <!-- 控制器端子区白底框与丝印文字 (左侧端子功能) -->
+        <text class="editable" x="508" y="140" font-size="11" font-weight="bold" fill="#38bdf8">内门锁</text>
+        <text class="editable" x="508" y="280" font-size="11" font-weight="bold" fill="#38bdf8">外门锁</text>
+        <text class="editable" x="508" y="425" font-size="11" font-weight="bold" fill="#cbd5e1">照 明</text>
+        <text class="editable" x="508" y="505" font-size="11" font-weight="bold" fill="#f87171">电 源</text>
+
+        <!-- 右侧端子功能丝印 -->
+        <text class="editable" x="850" y="140" font-size="11" font-weight="bold" fill="#4ade80" text-anchor="end">内门读卡</text>
+        <text class="editable" x="850" y="270" font-size="11" font-weight="bold" fill="#4ade80" text-anchor="end">外门读卡</text>
+        <text class="editable" x="850" y="400" font-size="11" font-weight="bold" fill="#fde047" text-anchor="end">室内操作键盘</text>
+
+        <!-- 拨码丝印表格 (实物文字完全一致) -->
+        <g font-family="Consolas, monospace" font-size="9" fill="#cbd5e1">
+          <text class="editable" x="660" y="242" font-weight="bold" fill="#f8fafc">【拨码定义】 3 4 延时(S)</text>
+          <text class="editable" x="660" y="258">上 上: 3秒   下 上: 5秒</text>
+          <text class="editable" x="660" y="270">上 下: 7秒   下 下: 9秒</text>
+          <text class="editable" x="725" y="302" font-size="10" fill="#94a3b8">拨码开关</text>
         </g>
-      </svg>
-    </div>
+        <!-- 音量与12V丝印 -->
+        <text class="editable" x="760" y="432" font-size="10" fill="#94a3b8" text-anchor="middle">音量</text>
+        <text class="editable" x="678" y="424" font-size="10" fill="#4ade80" text-anchor="middle">+12V</text>
+      </g>
+
+      <!-- ==================== 3. 详细端子标签文字 ==================== -->
+      <g font-family="Consolas, monospace" font-size="11">
+        <!-- 内门电锁端子 (右对齐，靠近出线口 x=300) -->
+        <text class="editable" x="290" y="134" text-anchor="end" fill="#0369a1" font-weight="600">12V+</text>
+        <text class="editable" x="290" y="159" text-anchor="end" fill="#475569" font-weight="600">12V-</text>
+        <text class="editable" x="290" y="184" text-anchor="end" fill="#0284c7" font-weight="600">COM (门磁)</text>
+        <text class="editable" x="290" y="209" text-anchor="end" fill="#0284c7" font-weight="600">NO  (门磁)</text>
+
+        <!-- 外门电锁端子 (左对齐，靠近出线口 x=1100) -->
+        <text class="editable" x="1110" y="134" fill="#0369a1" font-weight="600">12V+</text>
+        <text class="editable" x="1110" y="159" fill="#475569" font-weight="600">12V-</text>
+        <text class="editable" x="1110" y="184" fill="#0284c7" font-weight="600">COM (门磁)</text>
+        <text class="editable" x="1110" y="209" fill="#0284c7" font-weight="600">NO  (门磁)</text>
+
+        <!-- 开门按钮端子 -->
+        <text class="editable" x="290" y="304" text-anchor="end" fill="#475569" font-weight="600">COM</text>
+        <text class="editable" x="290" y="329" text-anchor="end" fill="#15803d" font-weight="600">NO</text>
+        <text class="editable" x="1110" y="304" fill="#475569" font-weight="600">COM</text>
+        <text class="editable" x="1110" y="329" fill="#15803d" font-weight="600">NO</text>
+
+        <!-- 电源适配器端子 -->
+        <text class="editable" x="100" y="432" fill="#dc2626" font-weight="bold">+12V</text>
+        <text class="editable" x="240" y="432" fill="#475569" font-weight="bold">GND</text>
+        <text class="editable" x="1150" y="432" fill="#dc2626" font-weight="bold">+12V</text>
+        <text class="editable" x="1290" y="432" fill="#475569" font-weight="bold">GND</text>
+
+        <!-- 门禁设备端子 -->
+        <text class="editable" x="100" y="535" fill="#dc2626" font-weight="bold">+12V</text>
+        <text class="editable" x="240" y="535" fill="#475569" font-weight="bold">GND</text>
+        <text class="editable" x="290" y="570" text-anchor="end" fill="#475569" font-weight="600">COM (继电器)</text>
+        <text class="editable" x="290" y="600" text-anchor="end" fill="#15803d" font-weight="600">NO  (继电器)</text>
+        <text class="editable" x="110" y="625" fill="#f97316" font-weight="bold">485A</text>
+        <text class="editable" x="190" y="625" fill="#9333ea" font-weight="bold">485B</text>
+
+        <text class="editable" x="1150" y="535" fill="#dc2626" font-weight="bold">+12V</text>
+        <text class="editable" x="1290" y="535" fill="#475569" font-weight="bold">GND</text>
+        <text class="editable" x="1110" y="570" fill="#475569" font-weight="600">COM (继电器)</text>
+        <text class="editable" x="1110" y="600" fill="#15803d" font-weight="600">NO  (继电器)</text>
+        <text class="editable" x="1210" y="625" fill="#f97316" font-weight="bold">485A</text>
+        <text class="editable" x="1290" y="625" fill="#9333ea" font-weight="bold">485B</text>
+
+        <!-- 摄像头端子 -->
+        <text class="editable" x="650" y="722" fill="#f97316" font-weight="bold">485A</text>
+        <text class="editable" x="740" y="722" fill="#9333ea" font-weight="bold">485B</text>
+
+        <!-- 控制器左侧实物端子丝印标注 (靠近端子块) -->
+        <!-- 内门锁 5P: GND, 门磁(M+), 闭锁(S+), GND, 开锁(L+) -->
+        <text class="editable" x="495" y="133" fill="#ffffff" font-size="10">开锁 (L+)</text>
+        <text class="editable" x="495" y="157" fill="#94a3b8" font-size="10">GND</text>
+        <text class="editable" x="495" y="181" fill="#94a3b8" font-size="10">闭锁 (S+)</text>
+        <text class="editable" x="495" y="205" fill="#38bdf8" font-size="10">门磁 (M+)</text>
+        <text class="editable" x="495" y="229" fill="#94a3b8" font-size="10">GND</text>
+
+        <!-- 外门锁 5P -->
+        <text class="editable" x="495" y="273" fill="#ffffff" font-size="10">开锁 (L+)</text>
+        <text class="editable" x="495" y="297" fill="#94a3b8" font-size="10">GND</text>
+        <text class="editable" x="495" y="321" fill="#94a3b8" font-size="10">闭锁 (S+)</text>
+        <text class="editable" x="495" y="345" fill="#38bdf8" font-size="10">门磁 (M+)</text>
+        <text class="editable" x="495" y="369" fill="#94a3b8" font-size="10">GND</text>
+
+        <!-- 照明 2P -->
+        <text class="editable" x="495" y="423" fill="#ffffff" font-size="10">+</text>
+        <text class="editable" x="495" y="447" fill="#94a3b8" font-size="10">-</text>
+
+        <!-- 电源 2P -->
+        <text class="editable" x="495" y="503" fill="#94a3b8" font-size="10">- (GND)</text>
+        <text class="editable" x="495" y="527" fill="#f87171" font-size="10">+ (+12V)</text>
+
+        <!-- 控制器右侧实物端子丝印标注 -->
+        <!-- 内门读卡 4P: +12V, GND, TM卡, 按钮 -->
+        <text class="editable" x="905" y="133" fill="#f87171" font-size="10" text-anchor="end">+12V</text>
+        <text class="editable" x="905" y="157" fill="#94a3b8" font-size="10" text-anchor="end">GND (公共)</text>
+        <text class="editable" x="905" y="181" fill="#94a3b8" font-size="10" text-anchor="end">TM 卡</text>
+        <text class="editable" x="905" y="205" fill="#4ade80" font-size="10" text-anchor="end">按 钮 (信号)</text>
+
+        <!-- 外门读卡 4P -->
+        <text class="editable" x="905" y="263" fill="#f87171" font-size="10" text-anchor="end">+12V</text>
+        <text class="editable" x="905" y="287" fill="#94a3b8" font-size="10" text-anchor="end">GND (公共)</text>
+        <text class="editable" x="905" y="311" fill="#94a3b8" font-size="10" text-anchor="end">TM 卡</text>
+        <text class="editable" x="905" y="335" fill="#4ade80" font-size="10" text-anchor="end">按 钮 (信号)</text>
+
+        <!-- 室内操作键盘 6P -->
+        <text class="editable" x="905" y="393" fill="#e2e8f0" font-size="10" text-anchor="end">外 开</text>
+        <text class="editable" x="905" y="417" fill="#e2e8f0" font-size="10" text-anchor="end">内 开</text>
+        <text class="editable" x="905" y="441" fill="#e2e8f0" font-size="10" text-anchor="end">全 开</text>
+        <text class="editable" x="905" y="465" fill="#e2e8f0" font-size="10" text-anchor="end">全 锁</text>
+        <text class="editable" x="905" y="489" fill="#e2e8f0" font-size="10" text-anchor="end">复 位</text>
+        <text class="editable" x="905" y="513" fill="#94a3b8" font-size="10" text-anchor="end">GND</text>
+      </g>
+
+      <!-- ==================== 4. 规范预设导线层 ==================== -->
+      <g id="preset-wires-group" stroke-linecap="round" stroke-linejoin="round">
+        <!-- ---------------- A. 内门锁控与门磁回路 (蓝色) ---------------- -->
+        <!-- 开锁 L+ (466, 130) -> 内门电锁 12V+ (300, 130) -->
+        <path d="M 466 130 L 300 130" stroke="#0284c7" stroke-width="2.2" fill="none"/>
+        <!-- GND (466, 155) -> 内门电锁 12V- (300, 155) -->
+        <path d="M 466 155 L 300 155" stroke="#475569" stroke-width="2.2" fill="none"/>
+        <!-- 门磁 M+ (466, 205) -> 内门电锁 COM (300, 180) -->
+        <path d="M 466 205 L 380 205 L 380 180 L 300 180" stroke="#0284c7" stroke-width="2" stroke-dasharray="4, 3" fill="none"/>
+        <!-- GND (466, 230) -> 内门电锁 NO (300, 205) -->
+        <path d="M 466 230 L 360 230 L 360 205 L 300 205" stroke="#475569" stroke-width="2" stroke-dasharray="4, 3" fill="none"/>
+
+        <!-- ---------------- B. 外门锁控与门磁回路 (蓝色走线引导) ---------------- -->
+        <!-- 控制器外门锁 L+ (466, 270) -> 绕下过道 -> 外门电锁 12V+ (1100, 130) -->
+        <path d="M 466 270 L 440 270 L 440 80 L 1060 80 L 1060 130 L 1100 130" stroke="#0284c7" stroke-width="2.2" fill="none"/>
+        <!-- 外门锁 GND (466, 295) -> 外门电锁 12V- (1100, 155) -->
+        <path d="M 466 295 L 430 295 L 430 70 L 1070 70 L 1070 155 L 1100 155" stroke="#475569" stroke-width="2.2" fill="none"/>
+        <!-- 外门门磁 M+ (466, 345) -> 外门电锁 COM (1100, 180) -->
+        <path d="M 466 345 L 420 345 L 420 60 L 1080 60 L 1080 180 L 1100 180" stroke="#0284c7" stroke-width="2" stroke-dasharray="4, 3" fill="none"/>
+        <!-- 外门门磁 GND (466, 370) -> 外门电锁 NO (1100, 205) -->
+        <path d="M 466 370 L 410 370 L 410 50 L 1090 50 L 1090 205 L 1100 205" stroke="#475569" stroke-width="2" stroke-dasharray="4, 3" fill="none"/>
+
+        <!-- ---------------- C. 内门开门触发回路 (绿色 #16a34a) ---------------- -->
+        <!-- 内门按钮 NO (300, 325) -> 控制器内门读卡【按钮】(934, 205) -->
+        <path d="M 300 325 L 410 325 L 410 360 L 790 360 L 790 205 L 934 205" stroke="#16a34a" stroke-width="2.2" fill="none"/>
+        <!-- 门禁设备继电器 NO (300, 600) 并联接入内门开门信号线 (X=410, Y=360) -->
+        <path d="M 300 600 L 410 600 L 410 360" stroke="#16a34a" stroke-width="2.2" fill="none"/>
+
+        <!-- ---------------- D. 内门公共地 GND 信号回路 (深灰色 #475569) ---------------- -->
+        <!-- 内门按钮 COM (300, 300) -> 控制器内门读卡【GND】(934, 155) -->
+        <path d="M 300 300 L 400 300 L 400 350 L 800 350 L 800 155 L 934 155" stroke="#475569" stroke-width="2" fill="none"/>
+        <!-- 门禁设备 COM (300, 570) 并联接入 (X=400, Y=350) -->
+        <path d="M 300 570 L 400 570 L 400 350" stroke="#475569" stroke-width="2" fill="none"/>
+
+        <!-- ---------------- E. 外门开门触发回路 (绿色 #16a34a) ---------------- -->
+        <!-- 外门按钮 NO (1100, 325) -> 控制器外门读卡【按钮】(934, 335) -->
+        <path d="M 1100 325 L 1020 325 L 1020 335 L 934 335" stroke="#16a34a" stroke-width="2.2" fill="none"/>
+        <!-- 外门门禁设备 NO (1100, 600) 并联接入 (X=1020, Y=335) -->
+        <path d="M 1100 600 L 1020 600 L 1020 335" stroke="#16a34a" stroke-width="2.2" fill="none"/>
+
+        <!-- ---------------- F. 外门公共地 GND 信号回路 (深灰色 #475569) ---------------- -->
+        <!-- 外门按钮 COM (1100, 300) -> 控制器外门读卡【GND】(934, 287) -->
+        <path d="M 1100 300 L 1030 300 L 1030 287 L 934 287" stroke="#475569" stroke-width="2" fill="none"/>
+        <!-- 外门门禁设备 COM (1100, 570) 并联接入 (X=1030, Y=287) -->
+        <path d="M 1100 570 L 1030 570 L 1030 287" stroke="#475569" stroke-width="2" fill="none"/>
+
+        <!-- ---------------- G. 门禁独立供电与共地 (红色 #dc2626 & 灰色) ---------------- -->
+        <!-- 内门适配器 +12V (100, 435) -> 门禁 +12V (100, 520) -->
+        <path d="M 100 435 L 100 520" stroke="#dc2626" stroke-width="2.5" fill="none"/>
+        <!-- 内门适配器 GND (240, 435) -> 门禁 GND (240, 520) -->
+        <path d="M 240 435 L 240 520" stroke="#475569" stroke-width="2.5" fill="none"/>
+
+        <!-- 外门适配器 +12V (1160, 435) -> 门禁 +12V (1160, 520) -->
+        <path d="M 1160 435 L 1160 520" stroke="#dc2626" stroke-width="2.5" fill="none"/>
+        <!-- 外门适配器 GND (1300, 435) -> 门禁 GND (1300, 520) -->
+        <path d="M 1300 435 L 1300 520" stroke="#475569" stroke-width="2.5" fill="none"/>
+
+        <!-- ---------------- H. 底层 RS485 菊花链总线 (橙色 A / 紫色 B) ---------------- -->
+        <!-- 485A 总线: 内门门禁 (110, 640) -> 摄像头 (650, 725) -> 外门门禁 (1210, 640) -->
+        <path d="M 110 640 L 110 745 L 650 745 L 650 725" stroke="#f97316" stroke-width="2" stroke-dasharray="6, 3" fill="none"/>
+        <path d="M 650 745 L 1210 745 L 1210 640" stroke="#f97316" stroke-width="2" stroke-dasharray="6, 3" fill="none"/>
+
+        <!-- 485B 总线: 内门门禁 (190, 640) -> 摄像头 (740, 725) -> 外门门禁 (1290, 640) -->
+        <path d="M 190 640 L 190 760 L 740 760 L 740 725" stroke="#9333ea" stroke-width="2" stroke-dasharray="6, 3" fill="none"/>
+        <path d="M 740 760 L 1290 760 L 1290 640" stroke="#9333ea" stroke-width="2" stroke-dasharray="6, 3" fill="none"/>
+      </g>
+
+      <!-- ==================== 5. 导线功能文字说明标注 ==================== -->
+      <g font-family="'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#475569">
+        <text class="editable" x="375" y="125" text-anchor="middle" fill="#0284c7" font-weight="600">内门开锁 L+ (控电)</text>
+        <text class="editable" x="375" y="150" text-anchor="middle">内门电锁 12V-</text>
+        <text class="editable" x="340" y="175" text-anchor="middle" fill="#0284c7">内门门磁 COM</text>
+        <text class="editable" x="340" y="224" text-anchor="middle">内门门磁 NO</text>
+
+        <text class="editable" x="750" y="75" text-anchor="middle" fill="#0284c7" font-weight="600">外门电锁 L+ / GND 控锁回路 (顶端跨接)</text>
+        <text class="editable" x="750" y="55" text-anchor="middle" fill="#0284c7">外门门磁反馈信号线 (闭门互锁判定)</text>
+
+        <text class="editable" x="480" y="345" fill="#16a34a" font-weight="600">内门开门触发信号 (并联接入【内门读卡-按钮】)</text>
+        <text class="editable" x="480" y="375" fill="#64748b">内门公共接地基准 (接入【内门读卡-GND】)</text>
+
+        <text class="editable" x="1005" y="350" text-anchor="end" fill="#16a34a" font-weight="600">外门开门信号 (并联接【外门读卡-按钮】)</text>
+        <text class="editable" x="1005" y="275" text-anchor="end" fill="#64748b">外门公共地 (接【外门读卡-GND】)</text>
+
+        <text class="editable" x="135" y="475" fill="#dc2626" font-size="10">独立 12V 供电</text>
+        <text class="editable" x="1195" y="475" fill="#dc2626" font-size="10">独立 12V 供电</text>
+
+        <text class="editable" x="400" y="740" fill="#f97316" font-size="10">RS-485 A (双绞屏蔽线)</text>
+        <text class="editable" x="400" y="775" fill="#9333ea" font-size="10">RS-485 B (双绞屏蔽线)</text>
+      </g>
+
+      <!-- ==================== 6. 电气节点实心小圆点 (磁吸点与电气连通点) ==================== -->
+      <g id="terminals-group" fill="#0f172a" stroke="#ffffff" stroke-width="1.5">
+        <!-- 内门电锁端子 -->
+        <circle cx="300" cy="130" r="3.5" data-snap="内门电锁 12V+"/>
+        <circle cx="300" cy="155" r="3.5" data-snap="内门电锁 12V-"/>
+        <circle cx="300" cy="180" r="3.5" data-snap="内门电锁 COM"/>
+        <circle cx="300" cy="205" r="3.5" data-snap="内门电锁 NO"/>
+
+        <!-- 外门电锁端子 -->
+        <circle cx="1100" cy="130" r="3.5" data-snap="外门电锁 12V+"/>
+        <circle cx="1100" cy="155" r="3.5" data-snap="外门电锁 12V-"/>
+        <circle cx="1100" cy="180" r="3.5" data-snap="外门电锁 COM"/>
+        <circle cx="1100" cy="205" r="3.5" data-snap="外门电锁 NO"/>
+
+        <!-- 内门按钮 -->
+        <circle cx="300" cy="300" r="3.5" data-snap="内门按钮 COM"/>
+        <circle cx="300" cy="325" r="3.5" data-snap="内门按钮 NO"/>
+
+        <!-- 外门按钮 -->
+        <circle cx="1100" cy="300" r="3.5" data-snap="外门按钮 COM"/>
+        <circle cx="1100" cy="325" r="3.5" data-snap="外门按钮 NO"/>
+
+        <!-- 内门电源适配器 -->
+        <circle cx="100" cy="425" r="3.5" fill="#dc2626" data-snap="内门电源 +12V"/>
+        <circle cx="240" cy="425" r="3.5" fill="#475569" data-snap="内门电源 GND"/>
+
+        <!-- 外门电源适配器 -->
+        <circle cx="1160" cy="425" r="3.5" fill="#dc2626" data-snap="外门电源 +12V"/>
+        <circle cx="1300" cy="425" r="3.5" fill="#475569" data-snap="外门电源 GND"/>
+
+        <!-- 内门门禁端子 -->
+        <circle cx="100" cy="525" r="3.5" fill="#dc2626" data-snap="内门门禁 +12V"/>
+        <circle cx="240" cy="525" r="3.5" fill="#475569" data-snap="内门门禁 GND"/>
+        <circle cx="300" cy="570" r="3.5" data-snap="内门门禁 COM"/>
+        <circle cx="300" cy="600" r="3.5" data-snap="内门门禁 NO"/>
+        <circle cx="110" cy="635" r="3.5" fill="#f97316" data-snap="内门门禁 485A"/>
+        <circle cx="190" cy="635" r="3.5" fill="#9333ea" data-snap="内门门禁 485B"/>
+
+        <!-- 外门门禁端子 -->
+        <circle cx="1160" cy="525" r="3.5" fill="#dc2626" data-snap="外门门禁 +12V"/>
+        <circle cx="1300" cy="525" r="3.5" fill="#475569" data-snap="外门门禁 GND"/>
+        <circle cx="1100" cy="570" r="3.5" data-snap="外门门禁 COM"/>
+        <circle cx="1100" cy="600" r="3.5" data-snap="外门门禁 NO"/>
+        <circle cx="1210" cy="635" r="3.5" fill="#f97316" data-snap="外门门禁 485A"/>
+        <circle cx="1290" cy="635" r="3.5" fill="#9333ea" data-snap="外门门禁 485B"/>
+
+        <!-- 控制器左侧接线点 -->
+        <circle cx="466" cy="130" r="3.5" fill="#22c55e" data-snap="控制器内门锁 L+"/>
+        <circle cx="466" cy="155" r="3.5" fill="#22c55e" data-snap="控制器内门锁 GND"/>
+        <circle cx="466" cy="180" r="3.5" fill="#22c55e" data-snap="控制器内门锁 S+"/>
+        <circle cx="466" cy="205" r="3.5" fill="#22c55e" data-snap="控制器内门锁 M+"/>
+        <circle cx="466" cy="230" r="3.5" fill="#22c55e" data-snap="控制器内门锁 GND"/>
+
+        <circle cx="466" cy="270" r="3.5" fill="#22c55e" data-snap="控制器外门锁 L+"/>
+        <circle cx="466" cy="295" r="3.5" fill="#22c55e" data-snap="控制器外门锁 GND"/>
+        <circle cx="466" cy="320" r="3.5" fill="#22c55e" data-snap="控制器外门锁 S+"/>
+        <circle cx="466" cy="345" r="3.5" fill="#22c55e" data-snap="控制器外门锁 M+"/>
+        <circle cx="466" cy="370" r="3.5" fill="#22c55e" data-snap="控制器外门锁 GND"/>
+
+        <!-- 控制器右侧接线点 -->
+        <circle cx="934" cy="130" r="3.5" fill="#22c55e" data-snap="控制器内门读卡 +12V"/>
+        <circle cx="934" cy="155" r="3.5" fill="#22c55e" data-snap="控制器内门读卡 GND"/>
+        <circle cx="934" cy="180" r="3.5" fill="#22c55e" data-snap="控制器内门读卡 TM"/>
+        <circle cx="934" cy="205" r="3.5" fill="#22c55e" data-snap="控制器内门读卡 按钮"/>
+
+        <circle cx="934" cy="260" r="3.5" fill="#22c55e" data-snap="控制器外门读卡 +12V"/>
+        <circle cx="934" cy="287" r="3.5" fill="#22c55e" data-snap="控制器外门读卡 GND"/>
+        <circle cx="934" cy="311" r="3.5" fill="#22c55e" data-snap="控制器外门读卡 TM"/>
+        <circle cx="934" cy="335" r="3.5" fill="#22c55e" data-snap="控制器外门读卡 按钮"/>
+
+        <!-- 电气并联连通实心节点 (Junctions) -->
+        <circle cx="410" cy="360" r="4" fill="#16a34a"/>
+        <circle cx="400" cy="350" r="4" fill="#475569"/>
+        <circle cx="1020" cy="335" r="4" fill="#16a34a"/>
+        <circle cx="1030" cy="287" r="4" fill="#475569"/>
+      </g>
+
+      <!-- ==================== 7. 底部图例与接线施工核心要点 ==================== -->
+      <g id="legend-and-notes" transform="translate(50, 785)">
+        <!-- 图例框 (左侧) -->
+        <rect x="0" y="0" width="480" height="110" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+        <text class="editable" x="18" y="24" font-family="'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" font-weight="bold" fill="#0f172a">图 例 说 明</text>
+        
+        <line x1="20" y1="46" x2="65" y2="46" stroke="#16a34a" stroke-width="2.5"/>
+        <text class="editable" x="72" y="50" font-size="11" fill="#334155">开门信号 (NO触点脉冲)</text>
+
+        <line x1="240" y1="46" x2="285" y2="46" stroke="#dc2626" stroke-width="2.5"/>
+        <text class="editable" x="292" y="50" font-size="11" fill="#334155">12V 供电正极 (+12V)</text>
+
+        <line x1="20" y1="72" x2="65" y2="72" stroke="#0284c7" stroke-width="2.5"/>
+        <text class="editable" x="72" y="76" font-size="11" fill="#334155">控锁输出 (L+) / 门磁 (M+)</text>
+
+        <line x1="240" y1="72" x2="285" y2="72" stroke="#475569" stroke-width="2.5"/>
+        <text class="editable" x="292" y="76" font-size="11" fill="#334155">公共端 / 电源负极 (GND)</text>
+
+        <line x1="20" y1="96" x2="65" y2="96" stroke="#f97316" stroke-width="2" stroke-dasharray="4,2"/>
+        <text class="editable" x="72" y="100" font-size="11" fill="#334155">RS-485 A (双绞屏蔽线)</text>
+
+        <line x1="240" y1="96" x2="285" y2="96" stroke="#9333ea" stroke-width="2" stroke-dasharray="4,2"/>
+        <text class="editable" x="292" y="100" font-size="11" fill="#334155">RS-485 B (双绞屏蔽线)</text>
+
+        <!-- 接线要点规范 (右侧) -->
+        <rect x="500" y="0" width="800" height="110" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>
+        <text class="editable" x="520" y="24" font-family="'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" font-weight="bold" fill="#0f172a">施工与接线要点 (请严格遵守规范)</text>
+        <g font-family="'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#475569">
+          <text class="editable" x="520" y="46">1. 【互锁闭环原理】：门磁信号 (M+ / GND) 用于判定门扇开闭状态。外门未完全吸合闭门时，控制器自动锁定内门，刷卡/按钮均无效。</text>
+          <text class="editable" x="520" y="66">2. 【电锁接线】：磁力锁为断电开门锁具，正负极接控制器【L+】与【GND】；门磁检测输出接入对应通道【M+】与【GND】。</text>
+          <text class="editable" x="520" y="86">3. 【信号并联与独立供电】：门禁机继电器干接点 (NO/COM) 与开门按钮 (NO/COM) 呈并联接入；门禁机由 12V2A 电源独立供电并共地。</text>
+          <text class="editable" x="520" y="104">4. 【拨码延时设定】：依实物面板拨码 3、4 脚设定开门保持时间：上上为 3 秒、下上为 5 秒、上下为 7 秒、下下为 9 秒。</text>
+        </g>
+      </g>
+
+      <!-- ==================== 8. 用户新增划线与标注图层 ==================== -->
+      <g id="user-wires-group"></g>
+
+      <!-- ==================== 9. 交互辅助层 (动态吸附指示、控制手柄、预览线) ==================== -->
+      <g id="interaction-layer">
+        <!-- 预览正在绘制的导线 -->
+        <path id="drawing-preview-wire" d="" fill="none" stroke="#22c55e" stroke-width="2.2" stroke-dasharray="4, 3" style="display:none; pointer-events:none;"/>
+        <!-- 磁吸吸附环 -->
+        <circle id="snap-indicator" class="snap-indicator" cx="0" cy="0" r="9" style="display:none;"/>
+      </g>
+    </svg>
   </div>
+</main>
 
-  <div id="shortcut-hint">
-    快捷键：<b>L</b> 切换划线 ｜ <b>V</b> 编辑/选择 ｜ <b>Esc</b> 取消当前划线 ｜ <b>Delete</b> 删除选中 ｜ <b>Ctrl+Z</b> 撤销 ｜ <b>空格+拖拽</b> 平移画布
-  </div>
-</div>
-
-<!-- 双击改字浮动输入框 -->
-<div id="text-editor-modal">
-  <input type="text" id="modal-text-input" placeholder="输入新的文字内容...">
-  <button onclick="confirmTextEdit()" class="btn-blue">确定</button>
-  <button onclick="closeTextModal()">取消</button>
+<div class="hint-toast">
+  <span class="badge">提示</span>
+  <span id="hint-text">按住鼠标左键拖拽或点击端子即可划线 ｜ 双击任意文字可直接编辑 ｜ 滚轮缩放 ｜ 空格+拖拽平移</span>
 </div>
 
 <script>
-  // ==================== 全局视图与交互状态 ====================
-  let scale = 1;
-  let posX = 0, posY = 0;
-  let isPanning = false;
-  let panStartX = 0, panStartY = 0;
-  let isSpacePressed = false;
-
-  // 模式: 'edit' | 'draw' | 'view'
-  let currentMode = 'edit';
-  // 走线类型: 'orthogonal' | 'straight' | 'polyline'
-  let routeType = 'orthogonal';
-  let currentWireColor = '#dc2626';
-
+// ==========================================
+// 状态与全局变量
+// ==========================================
+const state = {
+  viewMode: 'draw', // 'draw' | 'select'
+  lineMode: 'orthogonal', // 'orthogonal' | 'straight' | 'polyline'
+  lineColor: '#dc2626',
+  lineWidth: 2.2,
+  lineDash: 'solid',
+  arrowMode: 'dot',
+  snapEnabled: true,
+  scale: 1,
+  panX: 0,
+  panY: 0,
+  isPanning: false,
+  panStartX: 0,
+  panStartY: 0,
+  isSpacePressed: false,
   // 划线状态
-  let isDrawing = false;
-  let isLeftMouseDown = false;
-  let drawPoints = []; // [{x, y}, ...]
-  let mouseDownSvgPt = null;
-  let hasDraggedDuringDraw = false;
+  isDrawing: false,
+  drawStartPoint: null,
+  currentPoints: [],
+  selectedWireId: null,
+  activeHandleIndex: -1,
+  // 历史栈 (撤销/重做)
+  history: [],
+  historyIndex: -1
+};
 
-  // 选中与拖拽元素状态
-  let selectedElement = null; // 选中的 .user-wire-group, .wire-line, 或 text.editable
-  let isExplicitlySelected = false; // 区分用户主动点击选中 vs 画完线自动选中
-  let draggingTextEl = null;
-  let textDragOffset = { x: 0, y: 0 };
-  let draggingHandleInfo = null; // { wireGroup, pointIndex }
+const dom = {
+  container: document.getElementById('canvas-container'),
+  viewport: document.getElementById('svg-viewport'),
+  svg: document.getElementById('main-svg'),
+  previewWire: document.getElementById('drawing-preview-wire'),
+  snapIndicator: document.getElementById('snap-indicator'),
+  userWiresGroup: document.getElementById('user-wires-group'),
+  svgDefs: document.getElementById('svg-defs'),
+  // 按钮
+  btnDrawMode: document.getElementById('btn-draw-mode'),
+  btnSelectMode: document.getElementById('btn-select-mode'),
+  btnUndo: document.getElementById('btn-undo'),
+  btnRedo: document.getElementById('btn-redo'),
+  btnDelete: document.getElementById('btn-delete-selected'),
+  btnClearAll: document.getElementById('btn-clear-user-lines'),
+  btnZoomIn: document.getElementById('btn-zoom-in'),
+  btnZoomOut: document.getElementById('btn-zoom-out'),
+  btnZoomReset: document.getElementById('btn-zoom-reset'),
+  btnExportPng: document.getElementById('btn-export-png'),
+  btnExportSvg: document.getElementById('btn-export-svg'),
+  btnAddLineLabel: document.getElementById('btn-add-line-label'),
+  // 属性选择
+  selectLineMode: document.getElementById('line-mode-select'),
+  selectLineWidth: document.getElementById('line-width-select'),
+  selectLineDash: document.getElementById('line-dash-select'),
+  selectArrow: document.getElementById('line-arrow-select'),
+  checkSnap: document.getElementById('snap-to-terminals'),
+  colorPicker: document.getElementById('custom-color-picker'),
+  hintText: document.getElementById('hint-text')
+};
 
-  // 文本弹窗编辑
-  let currentEditingTextElement = null;
+// 存储用户添加的所有导线对象
+// wire = { id, mode, color, width, dash, arrow, points: [{x, y}], label: '' }
+let userWires = [];
 
-  // 历史记录栈 (Undo / Redo)
-  const historyStack = [];
-  const redoStack = [];
-  const MAX_HISTORY = 40;
+// ==========================================
+// 坐标转换与端子磁吸
+// ==========================================
+function clientToSvgPoint(clientX, clientY) {
+  const pt = dom.svg.createSVGPoint();
+  pt.x = clientX;
+  pt.y = clientY;
+  const ctm = dom.svg.getScreenCTM();
+  if (!ctm) return { x: clientX, y: clientY };
+  const inverse = ctm.inverse();
+  const svgPt = pt.matrixTransform(inverse);
+  return { x: Math.round(svgPt.x * 10) / 10, y: Math.round(svgPt.y * 10) / 10 };
+}
 
-  const svg = document.getElementById('main-svg');
-  const wrapper = document.getElementById('svg-wrapper');
-  const container = document.getElementById('viewer-container');
-  const modal = document.getElementById('text-editor-modal');
-  const input = document.getElementById('modal-text-input');
-  const userLinesLayer = document.getElementById('user-lines-layer');
-  const userTextsLayer = document.getElementById('user-texts-layer');
-  const interactionOverlay = document.getElementById('interaction-overlay');
-  const snapIndicator = document.getElementById('snap-indicator');
-  const previewWire = document.getElementById('preview-wire');
-  const previewStartDot = document.getElementById('preview-start-dot');
-  const previewEndDot = document.getElementById('preview-end-dot');
-  const selectionHandles = document.getElementById('selection-handles');
-
-  // ==================== 坐标转换与端子吸附 ====================
-  function clientToSvgPoint(clientX, clientY) {
-    const pt = svg.createSVGPoint();
-    pt.x = clientX;
-    pt.y = clientY;
-    const ctm = svg.getScreenCTM();
-    if (!ctm) return { x: 0, y: 0 };
-    const transformed = pt.matrixTransform(ctm.inverse());
-    return {
-      x: Math.round(transformed.x * 10) / 10,
-      y: Math.round(transformed.y * 10) / 10
-    };
-  }
-
-  function getAllSnapPoints() {
-    const pts = [];
-    // 收集所有端子圆点
-    svg.querySelectorAll('#terminal-nodes circle').forEach(c => {
-      pts.push({
-        x: parseFloat(c.getAttribute('cx')),
-        y: parseFloat(c.getAttribute('cy'))
-      });
+function getAllSnapPoints() {
+  const points = [];
+  const circles = dom.svg.querySelectorAll('#terminals-group circle, #device-boxes-group circle');
+  circles.forEach(c => {
+    points.push({
+      x: parseFloat(c.getAttribute('cx')),
+      y: parseFloat(c.getAttribute('cy')),
+      name: c.getAttribute('data-snap') || '端子'
     });
-    // 收集所有用户已画线条的端点
-    userLinesLayer.querySelectorAll('.user-wire-group').forEach(g => {
-      const raw = g.getAttribute('data-points');
-      if (raw) {
-        try {
-          const arr = JSON.parse(raw);
-          arr.forEach(p => pts.push({ x: p.x, y: p.y }));
-        } catch (e) {}
-      }
-    });
-    return pts;
-  }
-
-  function getSnappedPoint(clientX, clientY, shiftKey = false, refPoint = null) {
-    let pt = clientToSvgPoint(clientX, clientY);
-    const snapEnabled = document.getElementById('snap-checkbox').checked;
-
-    if (snapEnabled) {
-      const snapPts = getAllSnapPoints();
-      let bestDist = 13; // 吸附半径 (SVG像素)
-      let bestPt = null;
-      for (const sp of snapPts) {
-        const d = Math.hypot(sp.x - pt.x, sp.y - pt.y);
-        if (d < bestDist) {
-          bestDist = d;
-          bestPt = sp;
-        }
-      }
-      if (bestPt) {
-        snapIndicator.setAttribute('cx', bestPt.x);
-        snapIndicator.setAttribute('cy', bestPt.y);
-        snapIndicator.setAttribute('display', 'block');
-        return { x: bestPt.x, y: bestPt.y, snapped: true };
-      }
+  });
+  // 也吸附已有用户线的端点
+  userWires.forEach(w => {
+    if (w.points && w.points.length > 0) {
+      points.push({ x: w.points[0].x, y: w.points[0].y, name: '导线起点' });
+      points.push({ x: w.points[w.points.length - 1].x, y: w.points[w.points.length - 1].y, name: '导线终点' });
     }
+  });
+  return points;
+}
 
-    snapIndicator.setAttribute('display', 'none');
-
-    // 按住 Shift 键时水平/垂直正交锁定
-    if (shiftKey && refPoint) {
-      const dx = Math.abs(pt.x - refPoint.x);
-      const dy = Math.abs(pt.y - refPoint.y);
-      if (dx > dy) {
-        pt.y = refPoint.y;
-      } else {
-        pt.x = refPoint.x;
-      }
-    }
-
-    return { x: Math.round(pt.x), y: Math.round(pt.y), snapped: false };
+function getSnappedPoint(rawPt, tolerance = 16) {
+  if (!state.snapEnabled) {
+    dom.snapIndicator.style.display = 'none';
+    return rawPt;
   }
+  const snapList = getAllSnapPoints();
+  let closest = null;
+  let minDistance = tolerance;
 
-  // ==================== 历史记录 (撤销/重做) ====================
-  function saveHistorySnapshot() {
-    const state = {
-      userLines: userLinesLayer.innerHTML,
-      userTexts: userTextsLayer.innerHTML,
-      presetWires: document.getElementById('preset-wires').innerHTML
-    };
-    historyStack.push(state);
-    if (historyStack.length > MAX_HISTORY) historyStack.shift();
-    redoStack.length = 0;
-    updateUndoRedoButtons();
-  }
-
-  function restoreSnapshot(state) {
-    clearSelection();
-    userLinesLayer.innerHTML = state.userLines;
-    userTextsLayer.innerHTML = state.userTexts;
-    document.getElementById('preset-wires').innerHTML = state.presetWires;
-    updateUndoRedoButtons();
-  }
-
-  function undoAction() {
-    if (historyStack.length === 0) return;
-    const currentState = {
-      userLines: userLinesLayer.innerHTML,
-      userTexts: userTextsLayer.innerHTML,
-      presetWires: document.getElementById('preset-wires').innerHTML
-    };
-    redoStack.push(currentState);
-    const prevState = historyStack.pop();
-    restoreSnapshot(prevState);
-  }
-
-  function redoAction() {
-    if (redoStack.length === 0) return;
-    const currentState = {
-      userLines: userLinesLayer.innerHTML,
-      userTexts: userTextsLayer.innerHTML,
-      presetWires: document.getElementById('preset-wires').innerHTML
-    };
-    historyStack.push(currentState);
-    const nextState = redoStack.pop();
-    restoreSnapshot(nextState);
-  }
-
-  function updateUndoRedoButtons() {
-    document.getElementById('undo-btn').disabled = historyStack.length === 0;
-    document.getElementById('redo-btn').disabled = redoStack.length === 0;
-  }
-
-  // ==================== 箭头 Marker 动态生成 ====================
-  function ensureArrowMarker(color, isStart = false) {
-    const cleanHex = color.replace(/[^a-zA-Z0-9]/g, '');
-    const id = `arrow-${isStart ? 'start' : 'end'}-${cleanHex}`;
-    const defs = document.getElementById('svg-defs');
-    if (!document.getElementById(id)) {
-      const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
-      marker.setAttribute('id', id);
-      marker.setAttribute('viewBox', '0 0 10 10');
-      marker.setAttribute('refX', isStart ? '2' : '8');
-      marker.setAttribute('refY', '5');
-      marker.setAttribute('markerWidth', '6');
-      marker.setAttribute('markerHeight', '6');
-      marker.setAttribute('orient', 'auto');
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', isStart ? 'M 10 1 L 1 5 L 10 9 z' : 'M 0 1 L 9 5 L 0 9 z');
-      path.setAttribute('fill', color);
-      marker.appendChild(path);
-      defs.appendChild(marker);
-    }
-    return `url(#${id})`;
-  }
-
-  // ==================== 路径计算与渲染 ====================
-  function computeOrthogonalPoints(p1, p2) {
-    if (p1.x === p2.x || p1.y === p2.y) {
-      return [p1, p2];
-    }
-    const dx = Math.abs(p2.x - p1.x);
-    const dy = Math.abs(p2.y - p1.y);
-    if (dx >= dy) {
-      const midX = Math.round((p1.x + p2.x) / 2);
-      return [p1, { x: midX, y: p1.y }, { x: midX, y: p2.y }, p2];
-    } else {
-      const midY = Math.round((p1.y + p2.y) / 2);
-      return [p1, { x: p1.x, y: midY }, { x: p2.x, y: midY }, p2];
+  for (const pt of snapList) {
+    const d = Math.hypot(pt.x - rawPt.x, pt.y - rawPt.y);
+    if (d < minDistance) {
+      minDistance = d;
+      closest = pt;
     }
   }
 
-  function pointsToPathD(pts) {
-    if (!pts || pts.length === 0) return '';
-    return pts.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  if (closest) {
+    dom.snapIndicator.setAttribute('cx', closest.x);
+    dom.snapIndicator.setAttribute('cy', closest.y);
+    dom.snapIndicator.style.display = 'block';
+    return { x: closest.x, y: closest.y, isSnapped: true, name: closest.name };
+  } else {
+    dom.snapIndicator.style.display = 'none';
+    return rawPt;
+  }
+}
+
+// ==========================================
+// 历史记录与撤销重做 (Undo / Redo)
+// ==========================================
+function saveHistorySnapshot() {
+  if (state.historyIndex < state.history.length - 1) {
+    state.history = state.history.slice(0, state.historyIndex + 1);
+  }
+  const snapshot = JSON.stringify(userWires);
+  state.history.push(snapshot);
+  if (state.history.length > 40) state.history.shift();
+  state.historyIndex = state.history.length - 1;
+  updateUndoRedoButtons();
+}
+
+function restoreSnapshot(index) {
+  if (index < 0 || index >= state.history.length) return;
+  state.historyIndex = index;
+  userWires = JSON.parse(state.history[index]);
+  state.selectedWireId = null;
+  renderAllUserWires();
+  updateUndoRedoButtons();
+}
+
+function undoAction() {
+  if (state.historyIndex > 0) {
+    restoreSnapshot(state.historyIndex - 1);
+  }
+}
+
+function redoAction() {
+  if (state.historyIndex < state.history.length - 1) {
+    restoreSnapshot(state.historyIndex + 1);
+  }
+}
+
+function updateUndoRedoButtons() {
+  dom.btnUndo.disabled = state.historyIndex <= 0;
+  dom.btnRedo.disabled = state.historyIndex >= state.history.length - 1;
+  dom.btnDelete.disabled = !state.selectedWireId;
+}
+
+// ==========================================
+// 箭头 Marker 动态注册
+// ==========================================
+function ensureArrowMarker(color) {
+  const safeId = 'marker-arrow-' + color.replace('#', '');
+  if (!document.getElementById(safeId)) {
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    marker.setAttribute('id', safeId);
+    marker.setAttribute('viewBox', '0 0 10 10');
+    marker.setAttribute('refX', '7');
+    marker.setAttribute('refY', '5');
+    marker.setAttribute('markerWidth', '6');
+    marker.setAttribute('markerHeight', '6');
+    marker.setAttribute('orient', 'auto-start-reverse');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M 0 1.5 L 8 5 L 0 8.5 z');
+    path.setAttribute('fill', color);
+    marker.appendChild(path);
+    dom.svgDefs.appendChild(marker);
+  }
+  return safeId;
+}
+
+// ==========================================
+// 走线路径计算与生成
+// ==========================================
+function computeOrthogonalPoints(p1, p2) {
+  const dx = Math.abs(p2.x - p1.x);
+  const dy = Math.abs(p2.y - p1.y);
+  // 若两点接近水平或垂直，直接成一直线
+  if (dx < 4 || dy < 4) {
+    return [p1, p2];
+  }
+  // 默认中途折线：优先先水平走半程再垂直折弯
+  const midX = (p1.x + p2.x) / 2;
+  return [
+    p1,
+    { x: midX, y: p1.y },
+    { x: midX, y: p2.y },
+    p2
+  ];
+}
+
+function pointsToPathD(pts) {
+  if (!pts || pts.length === 0) return '';
+  if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`;
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for (let i = 1; i < pts.length; i++) {
+    d += ` L ${pts[i].x} ${pts[i].y}`;
+  }
+  return d;
+}
+
+function buildEffectivePoints(p1, p2, mode, isShift = false) {
+  if (mode === 'straight') {
+    if (isShift) {
+      const dx = Math.abs(p2.x - p1.x);
+      const dy = Math.abs(p2.y - p1.y);
+      if (dx > dy) return [p1, { x: p2.x, y: p1.y }];
+      else return [p1, { x: p1.x, y: p2.y }];
+    }
+    return [p1, p2];
+  }
+  if (mode === 'orthogonal') {
+    return computeOrthogonalPoints(p1, p2);
+  }
+  return [p1, p2];
+}
+
+// ==========================================
+// 导线渲染与交互
+// ==========================================
+function renderUserWireGroup(wire) {
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('id', 'wire-g-' + wire.id);
+  g.setAttribute('class', 'user-wire-group');
+  g.dataset.wireId = wire.id;
+
+  const isSelected = state.selectedWireId === wire.id;
+  const pathD = pointsToPathD(wire.points);
+
+  // 1. 底层透明加粗感应线 (方便点击选中)
+  const hitPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  hitPath.setAttribute('d', pathD);
+  hitPath.setAttribute('stroke', 'transparent');
+  hitPath.setAttribute('stroke-width', Math.max(wire.width + 12, 16));
+  hitPath.setAttribute('fill', 'none');
+  hitPath.style.cursor = 'pointer';
+  g.appendChild(hitPath);
+
+  // 2. 主体导线
+  const mainPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  mainPath.setAttribute('d', pathD);
+  mainPath.setAttribute('stroke', isSelected ? '#0ea5e9' : wire.color);
+  mainPath.setAttribute('stroke-width', isSelected ? wire.width + 1 : wire.width);
+  mainPath.setAttribute('fill', 'none');
+  mainPath.setAttribute('stroke-linecap', 'round');
+  mainPath.setAttribute('stroke-linejoin', 'round');
+
+  if (wire.dash === 'dashed') mainPath.setAttribute('stroke-dasharray', '5, 4');
+  else if (wire.dash === 'dotted') mainPath.setAttribute('stroke-dasharray', '2, 3');
+
+  // 端点箭头/圆点处理
+  if (wire.arrow === 'end-arrow') {
+    const markerId = ensureArrowMarker(isSelected ? '#0ea5e9' : wire.color);
+    mainPath.setAttribute('marker-end', `url(#${markerId})`);
+  } else if (wire.arrow === 'both-arrow') {
+    const markerId = ensureArrowMarker(isSelected ? '#0ea5e9' : wire.color);
+    mainPath.setAttribute('marker-start', `url(#${markerId})`);
+    mainPath.setAttribute('marker-end', `url(#${markerId})`);
+  }
+  g.appendChild(mainPath);
+
+  // 若为圆点模式，绘制两端端子圆点
+  if (wire.arrow === 'dot' && wire.points.length >= 2) {
+    const pStart = wire.points[0];
+    const pEnd = wire.points[wire.points.length - 1];
+    
+    const dot1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot1.setAttribute('cx', pStart.x);
+    dot1.setAttribute('cy', pStart.y);
+    dot1.setAttribute('r', isSelected ? 4 : 3.2);
+    dot1.setAttribute('fill', isSelected ? '#0ea5e9' : wire.color);
+    g.appendChild(dot1);
+
+    const dot2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot2.setAttribute('cx', pEnd.x);
+    dot2.setAttribute('cy', pEnd.y);
+    dot2.setAttribute('r', isSelected ? 4 : 3.2);
+    dot2.setAttribute('fill', isSelected ? '#0ea5e9' : wire.color);
+    g.appendChild(dot2);
   }
 
-  function buildEffectivePoints(rawPoints, rType) {
-    if (!rawPoints || rawPoints.length < 2) return rawPoints || [];
-    if (rType === 'orthogonal' && rawPoints.length === 2) {
-      return computeOrthogonalPoints(rawPoints[0], rawPoints[1]);
-    }
-    return rawPoints;
-  }
+  // 3. 线上文本标注 (如果设置了标注)
+  if (wire.label && wire.points.length >= 2) {
+    const midIdx = Math.floor(wire.points.length / 2);
+    const pA = wire.points[midIdx - 1] || wire.points[0];
+    const pB = wire.points[midIdx] || wire.points[wire.points.length - 1];
+    const labelX = (pA.x + pB.x) / 2;
+    const labelY = (pA.y + pB.y) / 2 - 6;
 
-  function renderUserWireGroup(groupEl) {
-    const rawPoints = JSON.parse(groupEl.getAttribute('data-points') || '[]');
-    const rType = groupEl.getAttribute('data-route') || 'straight';
-    const color = groupEl.getAttribute('data-color') || '#dc2626';
-    const width = groupEl.getAttribute('data-width') || '2';
-    const dash = groupEl.getAttribute('data-dash') || 'none';
-    const markerType = groupEl.getAttribute('data-marker') || 'dots';
-    const labelText = groupEl.getAttribute('data-label') || '';
+    const textBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    textBg.setAttribute('x', labelX - wire.label.length * 6);
+    textBg.setAttribute('y', labelY - 11);
+    textBg.setAttribute('width', wire.label.length * 12);
+    textBg.setAttribute('height', 16);
+    textBg.setAttribute('rx', '3');
+    textBg.setAttribute('fill', '#ffffff');
+    textBg.setAttribute('stroke', wire.color);
+    textBg.setAttribute('stroke-width', '0.8');
+    textBg.setAttribute('opacity', '0.92');
+    g.appendChild(textBg);
 
-    const effectivePts = buildEffectivePoints(rawPoints, rType);
-    const d = pointsToPathD(effectivePts);
-
-    groupEl.innerHTML = '';
-
-    // 透明宽热区方便鼠标点击选中
-    const hitPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    hitPath.setAttribute('d', d);
-    hitPath.setAttribute('fill', 'none');
-    hitPath.setAttribute('stroke', 'transparent');
-    hitPath.setAttribute('stroke-width', '12');
-    groupEl.appendChild(hitPath);
-
-    // 实际可见线段
-    const mainPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    mainPath.setAttribute('d', d);
-    mainPath.setAttribute('fill', 'none');
-    mainPath.setAttribute('stroke', color);
-    mainPath.setAttribute('stroke-width', width);
-    mainPath.setAttribute('stroke-linecap', 'round');
-    mainPath.setAttribute('stroke-linejoin', 'round');
-    if (dash && dash !== 'none') {
-      mainPath.setAttribute('stroke-dasharray', dash);
-    }
-    if (markerType === 'arrow-end' || markerType === 'arrow-both') {
-      mainPath.setAttribute('marker-end', ensureArrowMarker(color, false));
-    }
-    if (markerType === 'arrow-both') {
-      mainPath.setAttribute('marker-start', ensureArrowMarker(color, true));
-    }
-    groupEl.appendChild(mainPath);
-
-    // 两端实心接线圆点
-    if (markerType === 'dots' && effectivePts.length >= 2) {
-      const startPt = effectivePts[0];
-      const endPt = effectivePts[effectivePts.length - 1];
-      const r = Math.max(3, parseFloat(width) * 1.4);
-      [startPt, endPt].forEach(pt => {
-        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        c.setAttribute('cx', pt.x);
-        c.setAttribute('cy', pt.y);
-        c.setAttribute('r', r);
-        c.setAttribute('fill', color);
-        groupEl.appendChild(c);
-      });
-    }
-
-    // 线上文字标注
-    if (labelText && effectivePts.length >= 2) {
-      const midIdx = Math.floor(effectivePts.length / 2);
-      const pA = effectivePts[midIdx - 1];
-      const pB = effectivePts[midIdx];
-      const midX = Math.round((pA.x + pB.x) / 2);
-      const midY = Math.round((pA.y + pB.y) / 2) - 6;
-
-      const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      txt.setAttribute('class', 'editable wire-label');
-      txt.setAttribute('x', midX);
-      txt.setAttribute('y', midY);
-      txt.setAttribute('font-size', '11');
-      txt.setAttribute('font-weight', '600');
-      txt.setAttribute('fill', color);
-      txt.setAttribute('text-anchor', 'middle');
-      txt.setAttribute('font-family', "'PingFang SC', sans-serif");
-      txt.textContent = labelText;
-      groupEl.appendChild(txt);
-    }
-  }
-
-  function createNewUserWire(points, options = {}) {
-    if (!points || points.length < 2) return null;
-    // 过滤长度为0的无效线段
-    if (points.length === 2 && Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y) < 4) {
-      return null;
-    }
-    saveHistorySnapshot();
-
-    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    g.setAttribute('class', 'user-wire-group');
-    g.setAttribute('data-points', JSON.stringify(points));
-    g.setAttribute('data-route', options.route || routeType);
-    g.setAttribute('data-color', options.color || currentWireColor);
-    g.setAttribute('data-width', options.width || document.getElementById('wire-width-select').value);
-    g.setAttribute('data-dash', options.dash || document.getElementById('wire-dash-select').value);
-    g.setAttribute('data-marker', options.marker || document.getElementById('wire-marker-select').value);
-    if (options.label) {
-      g.setAttribute('data-label', options.label);
-    }
-
-    renderUserWireGroup(g);
-    userLinesLayer.appendChild(g);
-    selectElement(g, false);
-    return g;
-  }
-
-  // ==================== 模式与工具栏切换 ====================
-  function setInteractionMode(mode) {
-    cancelActiveDrawing();
-    currentMode = mode;
-
-    const editBtn = document.getElementById('toggle-edit-btn');
-    const drawBtn = document.getElementById('toggle-draw-btn');
-    const viewBtn = document.getElementById('toggle-view-btn');
-    const badge = document.getElementById('mode-badge');
-    const tip = document.getElementById('status-tip');
-
-    editBtn.classList.remove('active');
-    drawBtn.classList.remove('draw-active');
-    viewBtn.classList.remove('active');
-    wrapper.classList.remove('editing', 'drawing-mode');
-    container.classList.remove('drawing-cursor');
-    tip.classList.remove('draw-banner');
-
-    if (mode === 'edit') {
-      editBtn.classList.add('active');
-      wrapper.classList.add('editing');
-      badge.textContent = '编辑模式';
-      badge.style.background = '#0ea5e9';
-      badge.style.color = '#fff';
-      tip.textContent = '当前为【编辑模式】：双击文字改字，拖拽文字移动，点击任意线条可改色/调整端点/删除，点【划线/连线】开始画线！';
-    } else if (mode === 'draw') {
-      drawBtn.classList.add('draw-active');
-      wrapper.classList.add('editing', 'drawing-mode');
-      container.classList.add('drawing-cursor');
-      badge.textContent = '划线模式';
-      badge.style.background = '#f59e0b';
-      badge.style.color = '#0f172a';
-      tip.classList.add('draw-banner');
-      updateDrawTipText();
-    } else {
-      viewBtn.classList.add('active');
-      clearSelection();
-      closeTextModal();
-      badge.textContent = '浏览模式';
-      badge.style.background = '#334155';
-      badge.style.color = '#94a3b8';
-      tip.textContent = '当前为【浏览模式】：按住鼠标左键拖动平移，滚轮缩放查看细节。';
-    }
-  }
-
-  function updateDrawTipText() {
-    if (currentMode !== 'draw') return;
-    const tip = document.getElementById('status-tip');
-    if (routeType === 'polyline') {
-      tip.textContent = '【多段折线模式】：依次点击画布添加拐点，双击鼠标左键或按 Enter 完成连线，按 Esc 取消。';
-    } else if (routeType === 'orthogonal') {
-      tip.textContent = '【直角折线模式】：在起点按住拖拽到终点（或点击起点再点击终点）即可自动生成90°折线！靠近端子自动吸附。';
-    } else {
-      tip.textContent = '【直线连线模式】：在起点按住拖拽到终点（或点击起点再点击终点）即可绘制直线！按住 Shift 锁定水平/垂直。';
-    }
-  }
-
-  function setRouteType(type) {
-    cancelActiveDrawing();
-    routeType = type;
-    document.querySelectorAll('.route-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById(`route-${type}`).classList.add('active');
-
-    // 如果当前未在划线模式，点击走线按钮自动进入划线模式
-    if (currentMode !== 'draw') {
-      setInteractionMode('draw');
-    } else {
-      updateDrawTipText();
-    }
-
-    // 如果当前用户主动选中了一条新增线且点数为2，可切换其走线方式
-    if (selectedElement && isExplicitlySelected && selectedElement.classList.contains('user-wire-group')) {
-      const pts = JSON.parse(selectedElement.getAttribute('data-points') || '[]');
-      if (pts.length === 2 && (type === 'orthogonal' || type === 'straight')) {
+    const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    textEl.setAttribute('x', labelX);
+    textEl.setAttribute('y', labelY + 1);
+    textEl.setAttribute('text-anchor', 'middle');
+    textEl.setAttribute('fill', '#0f172a');
+    textEl.setAttribute('font-size', '10');
+    textEl.setAttribute('font-family', "'PingFang SC', sans-serif");
+    textEl.setAttribute('font-weight', '500');
+    textEl.textContent = wire.label;
+    textEl.style.cursor = 'pointer';
+    textEl.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      const newLabel = prompt('修改导线文字标注:', wire.label);
+      if (newLabel !== null) {
+        wire.label = newLabel.trim();
         saveHistorySnapshot();
-        selectedElement.setAttribute('data-route', type);
-        renderUserWireGroup(selectedElement);
-        renderSelectionHandles();
+        renderAllUserWires();
       }
-    }
+    });
+    g.appendChild(textEl);
   }
 
-  function selectWireColor(color, swatchEl) {
-    currentWireColor = color;
-    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
-    if (swatchEl) {
-      swatchEl.classList.add('selected');
-    } else {
-      const match = document.querySelector(`.color-swatch[data-color="${color.toLowerCase()}"]`);
-      if (match) match.classList.add('selected');
-    }
-    document.getElementById('custom-color-picker').value = color;
-    previewWire.setAttribute('stroke', color);
-    previewStartDot.setAttribute('fill', color);
-    previewEndDot.setAttribute('fill', color);
-
-    // 仅当用户主动选中线条（或处于编辑模式）时才修改已选线条的颜色；在划线模式下切换颜色用于下一条新线
-    if (selectedElement && (currentMode === 'edit' || isExplicitlySelected)) {
-      updateSelectedWireStyle(true);
-    } else if (currentMode === 'draw' && selectedElement && !isExplicitlySelected) {
-      clearSelection();
-    }
-  }
-
-  // ==================== 选中、端点手柄与样式更新 ====================
-  function selectElement(el, explicit = true) {
-    clearSelection();
-    if (!el) return;
-    selectedElement = el;
-    isExplicitlySelected = explicit;
-    selectedElement.classList.add('selected-wire');
-
-    const delBtn = document.getElementById('delete-selected-btn');
-    const labelBtn = document.getElementById('add-wire-label-btn');
-    delBtn.disabled = false;
-
-    if (el.classList.contains('user-wire-group')) {
-      labelBtn.disabled = false;
-      if (explicit) {
-        // 同步工具栏显示该线条的属性
-        const color = el.getAttribute('data-color') || '#dc2626';
-        const width = el.getAttribute('data-width') || '2';
-        const dash = el.getAttribute('data-dash') || 'none';
-        const marker = el.getAttribute('data-marker') || 'dots';
-        document.getElementById('wire-width-select').value = width;
-        document.getElementById('wire-dash-select').value = dash;
-        document.getElementById('wire-marker-select').value = marker;
-        document.getElementById('custom-color-picker').value = color;
-        document.querySelectorAll('.color-swatch').forEach(s => {
-          s.classList.toggle('selected', s.getAttribute('data-color') === color);
-        });
+  // 4. 选中模式下的端点控制手柄 (可拖拽修改两端)
+  if (isSelected) {
+    wire.points.forEach((pt, idx) => {
+      if (idx === 0 || idx === wire.points.length - 1) {
+        const handle = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        handle.setAttribute('x', pt.x - 4.5);
+        handle.setAttribute('y', pt.y - 4.5);
+        handle.setAttribute('width', 9);
+        handle.setAttribute('height', 9);
+        handle.setAttribute('rx', 2);
+        handle.setAttribute('class', 'wire-handle');
+        handle.dataset.pointIndex = idx;
+        handle.style.cursor = 'grab';
+        g.appendChild(handle);
       }
-      renderSelectionHandles();
-    } else {
-      labelBtn.disabled = true;
-    }
-  }
-
-  function clearSelection() {
-    if (selectedElement) {
-      selectedElement.classList.remove('selected-wire');
-      selectedElement = null;
-    }
-    isExplicitlySelected = false;
-    selectionHandles.innerHTML = '';
-    document.getElementById('delete-selected-btn').disabled = true;
-    document.getElementById('add-wire-label-btn').disabled = true;
-  }
-
-  function renderSelectionHandles() {
-    selectionHandles.innerHTML = '';
-    if (!selectedElement || !selectedElement.classList.contains('user-wire-group')) return;
-
-    const rawPoints = JSON.parse(selectedElement.getAttribute('data-points') || '[]');
-    rawPoints.forEach((pt, idx) => {
-      const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      handle.setAttribute('cx', pt.x);
-      handle.setAttribute('cy', pt.y);
-      handle.setAttribute('r', '6');
-      handle.setAttribute('fill', '#ffffff');
-      handle.setAttribute('stroke', '#f59e0b');
-      handle.setAttribute('stroke-width', '2.5');
-      handle.style.cursor = 'pointer';
-      handle.style.pointerEvents = 'all';
-      handle.setAttribute('data-handle-idx', idx);
-      selectionHandles.appendChild(handle);
     });
   }
 
-  function updateSelectedWireStyle(colorChanged = false) {
-    if (!selectedElement) return;
-    if (currentMode === 'draw' && !isExplicitlySelected) {
-      clearSelection();
-      return;
+  // 导线点击选中事件
+  g.addEventListener('click', (e) => {
+    if (state.viewMode === 'select') {
+      e.stopPropagation();
+      selectWire(wire.id);
     }
+  });
 
-    if (selectedElement.classList.contains('user-wire-group')) {
-      saveHistorySnapshot();
-      if (colorChanged) {
-        selectedElement.setAttribute('data-color', currentWireColor);
-      }
-      selectedElement.setAttribute('data-width', document.getElementById('wire-width-select').value);
-      selectedElement.setAttribute('data-dash', document.getElementById('wire-dash-select').value);
-      selectedElement.setAttribute('data-marker', document.getElementById('wire-marker-select').value);
-      renderUserWireGroup(selectedElement);
-      renderSelectionHandles();
-    } else if (selectedElement.classList.contains('wire-line')) {
-      saveHistorySnapshot();
-      if (colorChanged) {
-        selectedElement.setAttribute('stroke', currentWireColor);
-      }
-      selectedElement.setAttribute('stroke-width', document.getElementById('wire-width-select').value);
-      const dash = document.getElementById('wire-dash-select').value;
-      if (dash === 'none') {
-        selectedElement.removeAttribute('stroke-dasharray');
-      } else {
-        selectedElement.setAttribute('stroke-dasharray', dash);
-      }
+  return g;
+}
+
+function renderAllUserWires() {
+  dom.userWiresGroup.innerHTML = '';
+  userWires.forEach(w => {
+    const el = renderUserWireGroup(w);
+    dom.userWiresGroup.appendChild(el);
+  });
+}
+
+function selectWire(id) {
+  state.selectedWireId = id;
+  renderAllUserWires();
+  updateUndoRedoButtons();
+  if (id) {
+    const w = userWires.find(item => item.id === id);
+    if (w) {
+      dom.hintText.textContent = `已选中导线 (模式: ${w.mode}) ｜ 按 Delete 键或点击按钮删除 ｜ 双击文字修改标注`;
     }
   }
+}
 
-  function addLabelToSelectedWire() {
-    if (!selectedElement || !selectedElement.classList.contains('user-wire-group')) return;
-    const prev = selectedElement.getAttribute('data-label') || '互锁信号线';
-    const val = prompt('请输入该线条的标注文字（留空则移除标注）：', prev);
-    if (val === null) return;
-    saveHistorySnapshot();
-    selectedElement.setAttribute('data-label', val.trim());
-    renderUserWireGroup(selectedElement);
+function createNewUserWire(points) {
+  const newWire = {
+    id: 'w_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+    mode: state.lineMode,
+    color: state.lineColor,
+    width: parseFloat(state.lineWidth),
+    dash: state.lineDash,
+    arrow: state.arrowMode,
+    points: points,
+    label: ''
+  };
+  userWires.push(newWire);
+  saveHistorySnapshot();
+  renderAllUserWires();
+  return newWire;
+}
+
+// ==========================================
+// 交互模式切换
+// ==========================================
+function setInteractionMode(mode) {
+  state.viewMode = mode;
+  if (mode === 'draw') {
+    dom.btnDrawMode.classList.add('draw-active');
+    dom.btnSelectMode.classList.remove('active');
+    dom.container.classList.add('drawing-mode');
+    document.getElementById('draw-mode-label').textContent = '正在划线 (点击/拖拽)';
+    dom.hintText.textContent = '【划线模式】点击或拖拽端子绘制连线 ｜ 支持端子智能磁吸 ｜ 切换走线模式';
+  } else {
+    dom.btnDrawMode.classList.remove('draw-active');
+    dom.btnSelectMode.classList.add('active');
+    dom.container.classList.remove('drawing-mode');
+    document.getElementById('draw-mode-label').textContent = '划线/连线';
+    dom.snapIndicator.style.display = 'none';
+    dom.hintText.textContent = '【选择模式】点击导线可选中调端点、改颜色或删除 ｜ 双击任意文字直接修改';
   }
+}
 
-  function deleteSelectedElement() {
-    if (!selectedElement) return;
-    saveHistorySnapshot();
-    selectedElement.remove();
-    clearSelection();
-  }
+// ==========================================
+// 鼠标与绘图事件监听
+// ==========================================
+let polylinePoints = []; // 多段折线暂存
 
-  function clearUserWires() {
-    if (userLinesLayer.children.length === 0) return;
-    saveHistorySnapshot();
-    userLinesLayer.innerHTML = '';
-    clearSelection();
-  }
-
-  // ==================== 划线核心交互逻辑 ====================
-  function updatePreviewRender(currentMousePt) {
-    if (!isDrawing || drawPoints.length === 0) return;
-    const tempPts = [...drawPoints, currentMousePt];
-    const effectivePts = buildEffectivePoints(tempPts, routeType);
-    const d = pointsToPathD(effectivePts);
-
-    previewWire.setAttribute('d', d);
-    previewWire.setAttribute('stroke', currentWireColor);
-    previewWire.setAttribute('stroke-width', document.getElementById('wire-width-select').value);
-    previewWire.setAttribute('display', 'block');
-
-    previewStartDot.setAttribute('cx', drawPoints[0].x);
-    previewStartDot.setAttribute('cy', drawPoints[0].y);
-    previewStartDot.setAttribute('fill', currentWireColor);
-    previewStartDot.setAttribute('display', 'block');
-
-    previewEndDot.setAttribute('cx', currentMousePt.x);
-    previewEndDot.setAttribute('cy', currentMousePt.y);
-    previewEndDot.setAttribute('fill', currentWireColor);
-    previewEndDot.setAttribute('display', 'block');
-  }
-
-  function cancelActiveDrawing() {
-    isDrawing = false;
-    isLeftMouseDown = false;
-    drawPoints = [];
-    mouseDownSvgPt = null;
-    hasDraggedDuringDraw = false;
-    previewWire.setAttribute('display', 'none');
-    previewStartDot.setAttribute('display', 'none');
-    previewEndDot.setAttribute('display', 'none');
-    snapIndicator.setAttribute('display', 'none');
-  }
-
-  function finishActiveDrawing(finalPoint = null) {
-    if (!isDrawing) return;
-    if (finalPoint) {
-      const last = drawPoints[drawPoints.length - 1];
-      if (!last || Math.hypot(finalPoint.x - last.x, finalPoint.y - last.y) >= 4) {
-        drawPoints.push({ x: finalPoint.x, y: finalPoint.y });
-      }
-    }
-    if (drawPoints.length >= 2) {
-      createNewUserWire(drawPoints);
-    }
-    cancelActiveDrawing();
-  }
-
-  // ==================== 鼠标与画布事件绑定 ====================
-  function updateTransform() {
-    wrapper.style.transform = `translate(calc(-50% + ${posX}px), calc(-50% + ${posY}px)) scale(${scale})`;
-  }
-
-  // 滚轮缩放
-  container.addEventListener('wheel', (e) => {
+dom.container.addEventListener('mousedown', (e) => {
+  // 中键或按住空格拖拽平移画布
+  if (e.button === 1 || (e.button === 0 && state.isSpacePressed)) {
+    state.isPanning = true;
+    state.panStartX = e.clientX - state.panX;
+    state.panStartY = e.clientY - state.panY;
+    dom.container.classList.add('panning');
     e.preventDefault();
-    const zoomFactor = 1.1;
-    if (e.deltaY < 0) {
-      scale = Math.min(scale * zoomFactor, 6);
-    } else {
-      scale = Math.max(scale / zoomFactor, 0.3);
+    return;
+  }
+
+  if (e.button !== 0) return; // 只处理左键
+
+  const rawPt = clientToSvgPoint(e.clientX, e.clientY);
+
+  // 1. 如果在【选择模式】下点击了手柄，开始拖拽端点
+  if (state.viewMode === 'select' && e.target.classList.contains('wire-handle')) {
+    state.activeHandleIndex = parseInt(e.target.dataset.pointIndex);
+    return;
+  }
+
+  // 2. 如果在【划线模式】
+  if (state.viewMode === 'draw') {
+    const snapPt = getSnappedPoint(rawPt);
+    
+    // 多段折线模式
+    if (state.lineMode === 'polyline') {
+      polylinePoints.push(snapPt);
+      if (polylinePoints.length === 1) {
+        state.isDrawing = true;
+      }
+      dom.previewWire.setAttribute('d', pointsToPathD(polylinePoints));
+      dom.previewWire.style.display = 'block';
+      return;
     }
+
+    // 直角折线 / 直线模式: 记录起点
+    state.isDrawing = true;
+    state.drawStartPoint = snapPt;
+    dom.previewWire.style.display = 'block';
+    dom.previewWire.setAttribute('stroke', state.lineColor);
+  }
+});
+
+window.addEventListener('mousemove', (e) => {
+  // 画布平移处理
+  if (state.isPanning) {
+    state.panX = e.clientX - state.panStartX;
+    state.panY = e.clientY - state.panStartY;
     updateTransform();
-  }, { passive: false });
+    return;
+  }
 
-  container.addEventListener('mousedown', (e) => {
-    if (e.button !== 0) return;
+  const rawPt = clientToSvgPoint(e.clientX, e.clientY);
 
-    // 1. 检查是否点击了选中线条的端点拖拽手柄
-    const handleIdx = e.target.getAttribute && e.target.getAttribute('data-handle-idx');
-    if (handleIdx !== null && handleIdx !== undefined && selectedElement) {
-      e.stopPropagation();
-      saveHistorySnapshot();
-      draggingHandleInfo = {
-        wireGroup: selectedElement,
-        pointIndex: parseInt(handleIdx, 10)
-      };
-      return;
-    }
-
-    // 2. 如果按住空格键或处于浏览模式 -> 平移画布
-    if (isSpacePressed || currentMode === 'view') {
-      isPanning = true;
-      panStartX = e.clientX - posX;
-      panStartY = e.clientY - posY;
-      container.style.cursor = 'grabbing';
-      return;
-    }
-
-    // 3. 划线模式下的鼠标按下
-    if (currentMode === 'draw') {
-      isLeftMouseDown = true;
-      const refPt = drawPoints.length > 0 ? drawPoints[drawPoints.length - 1] : null;
-      const snappedPt = getSnappedPoint(e.clientX, e.clientY, e.shiftKey, refPt);
-
-      if (!isDrawing) {
-        // 开始新线段
-        isDrawing = true;
-        drawPoints = [{ x: snappedPt.x, y: snappedPt.y }];
-        mouseDownSvgPt = { x: snappedPt.x, y: snappedPt.y };
-        hasDraggedDuringDraw = false;
-        updatePreviewRender(snappedPt);
+  // 1. 拖拽调整导线手柄
+  if (state.activeHandleIndex >= 0 && state.selectedWireId) {
+    const snapPt = getSnappedPoint(rawPt);
+    const wire = userWires.find(w => w.id === state.selectedWireId);
+    if (wire) {
+      if (state.activeHandleIndex === 0) {
+        wire.points = buildEffectivePoints(snapPt, wire.points[wire.points.length - 1], wire.mode);
       } else {
-        // 已经在点击-移动绘制中
-        if (routeType === 'polyline') {
-          const last = drawPoints[drawPoints.length - 1];
-          // 如果双击靠近上一个点则直接结束折线
-          if (Math.hypot(snappedPt.x - last.x, snappedPt.y - last.y) < 5 && drawPoints.length >= 2) {
-            finishActiveDrawing();
-          } else {
-            drawPoints.push({ x: snappedPt.x, y: snappedPt.y });
-            updatePreviewRender(snappedPt);
-          }
-        } else {
-          // 直线或直角折线：第二次点击完成绘制
-          finishActiveDrawing(snappedPt);
-        }
+        wire.points = buildEffectivePoints(wire.points[0], snapPt, wire.mode);
       }
-      return;
+      renderAllUserWires();
     }
+    return;
+  }
 
-    // 4. 编辑模式下的选中、文字拖拽或画布平移
-    if (currentMode === 'edit') {
-      const userGroup = e.target.closest ? e.target.closest('.user-wire-group') : null;
-      if (userGroup) {
-        selectElement(userGroup, true);
-        return;
+  // 2. 划线模式移动预览
+  if (state.viewMode === 'draw') {
+    const snapPt = getSnappedPoint(rawPt);
+
+    if (state.isDrawing) {
+      if (state.lineMode === 'polyline' && polylinePoints.length > 0) {
+        const previewPts = [...polylinePoints, snapPt];
+        dom.previewWire.setAttribute('d', pointsToPathD(previewPts));
+      } else if (state.drawStartPoint) {
+        const effPts = buildEffectivePoints(state.drawStartPoint, snapPt, state.lineMode, e.shiftKey);
+        dom.previewWire.setAttribute('d', pointsToPathD(effPts));
       }
-      if (e.target.classList && e.target.classList.contains('wire-line')) {
-        selectElement(e.target, true);
-        return;
-      }
-      if (e.target.tagName && e.target.tagName.toLowerCase() === 'text') {
-        selectElement(e.target, true);
-        const svgPt = clientToSvgPoint(e.clientX, e.clientY);
-        const tx = parseFloat(e.target.getAttribute('x') || '0');
-        const ty = parseFloat(e.target.getAttribute('y') || '0');
-        draggingTextEl = e.target;
-        draggingTextEl._hasMoved = false;
-        textDragOffset = { x: svgPt.x - tx, y: svgPt.y - ty };
-        return;
-      }
-
-      // 点击空白背景区域 -> 取消选中并启动平移
-      clearSelection();
-      isPanning = true;
-      panStartX = e.clientX - posX;
-      panStartY = e.clientY - posY;
-      container.style.cursor = 'grabbing';
     }
-  });
+  }
+});
 
-  window.addEventListener('mousemove', (e) => {
-    // 1. 拖拽线条端点手柄
-    if (draggingHandleInfo) {
-      const { wireGroup, pointIndex } = draggingHandleInfo;
-      const pts = JSON.parse(wireGroup.getAttribute('data-points') || '[]');
-      const otherPt = pts.length === 2 ? pts[1 - pointIndex] : null;
-      const snapped = getSnappedPoint(e.clientX, e.clientY, e.shiftKey, otherPt);
-      pts[pointIndex] = { x: snapped.x, y: snapped.y };
-      wireGroup.setAttribute('data-points', JSON.stringify(pts));
-      renderUserWireGroup(wireGroup);
-      renderSelectionHandles();
-      return;
+window.addEventListener('mouseup', (e) => {
+  if (state.isPanning) {
+    state.isPanning = false;
+    dom.container.classList.remove('panning');
+  }
+
+  if (state.activeHandleIndex >= 0) {
+    state.activeHandleIndex = -1;
+    saveHistorySnapshot();
+    return;
+  }
+
+  if (state.isDrawing && state.lineMode !== 'polyline') {
+    const rawPt = clientToSvgPoint(e.clientX, e.clientY);
+    const snapPt = getSnappedPoint(rawPt);
+    const p1 = state.drawStartPoint;
+    const p2 = snapPt;
+
+    // 只有当起终点距离大于 6px 时才成线，避免误触
+    if (p1 && Math.hypot(p2.x - p1.x, p2.y - p1.y) > 6) {
+      const finalPts = buildEffectivePoints(p1, p2, state.lineMode, e.shiftKey);
+      createNewUserWire(finalPts);
     }
 
-    // 2. 拖拽移动文字
-    if (draggingTextEl) {
-      const svgPt = clientToSvgPoint(e.clientX, e.clientY);
-      const nx = Math.round(svgPt.x - textDragOffset.x);
-      const ny = Math.round(svgPt.y - textDragOffset.y);
-      if (!draggingTextEl._hasMoved) {
-        saveHistorySnapshot();
-        draggingTextEl._hasMoved = true;
-      }
-      draggingTextEl.setAttribute('x', nx);
-      draggingTextEl.setAttribute('y', ny);
-      return;
-    }
+    state.isDrawing = false;
+    state.drawStartPoint = null;
+    dom.previewWire.style.display = 'none';
+  }
+});
 
-    // 3. 划线模式实时预览与吸附
-    if (currentMode === 'draw') {
-      const refPt = drawPoints.length > 0 ? drawPoints[drawPoints.length - 1] : null;
-      const snapped = getSnappedPoint(e.clientX, e.clientY, e.shiftKey, refPt);
-      if (isDrawing) {
-        if (isLeftMouseDown && mouseDownSvgPt && Math.hypot(snapped.x - mouseDownSvgPt.x, snapped.y - mouseDownSvgPt.y) > 8) {
-          hasDraggedDuringDraw = true;
-        }
-        updatePreviewRender(snapped);
-      }
-      return;
-    }
+// 多段折线双击或 Enter 结束
+window.addEventListener('keydown', (e) => {
+  // 空格键平移指示
+  if (e.code === 'Space' && !state.isSpacePressed && document.activeElement.tagName !== 'INPUT') {
+    state.isSpacePressed = true;
+    dom.container.style.cursor = 'grab';
+  }
 
-    // 4. 画布拖拽平移
-    if (isPanning) {
-      posX = e.clientX - panStartX;
-      posY = e.clientY - panStartY;
-      updateTransform();
+  // Esc 取消划线
+  if (e.key === 'Escape') {
+    if (state.isDrawing) {
+      state.isDrawing = false;
+      state.drawStartPoint = null;
+      polylinePoints = [];
+      dom.previewWire.style.display = 'none';
+      dom.snapIndicator.style.display = 'none';
     }
-  });
+    selectWire(null);
+  }
 
-  window.addEventListener('mouseup', (e) => {
-    if (draggingHandleInfo) {
-      draggingHandleInfo = null;
-      snapIndicator.setAttribute('display', 'none');
-      return;
-    }
+  // Enter 完成多段线
+  if (e.key === 'Enter' && state.lineMode === 'polyline' && polylinePoints.length >= 2) {
+    createNewUserWire(polylinePoints);
+    polylinePoints = [];
+    state.isDrawing = false;
+    dom.previewWire.style.display = 'none';
+  }
 
-    if (draggingTextEl) {
-      draggingTextEl = null;
-      return;
-    }
+  // Delete / Backspace 删除选中导线
+  if ((e.key === 'Delete' || e.key === 'Backspace') && state.selectedWireId && document.activeElement.tagName !== 'INPUT') {
+    deleteSelectedWire();
+  }
 
-    // 划线模式下如果是按住鼠标拖拽画线，松开鼠标左键即完成线段
-    const wasDragDrawing = isLeftMouseDown && hasDraggedDuringDraw;
-    isLeftMouseDown = false;
-    if (currentMode === 'draw' && isDrawing && routeType !== 'polyline' && wasDragDrawing) {
-      const refPt = drawPoints[0];
-      const snapped = getSnappedPoint(e.clientX, e.clientY, e.shiftKey, refPt);
-      finishActiveDrawing(snapped);
-      return;
-    }
+  // Ctrl+Z 撤销
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+    e.preventDefault();
+    undoAction();
+  }
+  // Ctrl+Y 或 Ctrl+Shift+Z 重做
+  if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
+    e.preventDefault();
+    redoAction();
+  }
+});
 
-    if (isPanning) {
-      isPanning = false;
-      container.style.cursor = currentMode === 'draw' ? 'crosshair' : 'grab';
-    }
-  });
+window.addEventListener('keyup', (e) => {
+  if (e.code === 'Space') {
+    state.isSpacePressed = false;
+    dom.container.style.cursor = state.viewMode === 'draw' ? 'crosshair' : 'default';
+  }
+});
 
-  // 右键取消正在绘制的线条
-  container.addEventListener('contextmenu', (e) => {
-    if (isDrawing) {
+dom.container.addEventListener('dblclick', (e) => {
+  if (state.lineMode === 'polyline' && polylinePoints.length >= 2) {
+    createNewUserWire(polylinePoints);
+    polylinePoints = [];
+    state.isDrawing = false;
+    dom.previewWire.style.display = 'none';
+  }
+});
+
+function deleteSelectedWire() {
+  if (!state.selectedWireId) return;
+  userWires = userWires.filter(w => w.id !== state.selectedWireId);
+  state.selectedWireId = null;
+  saveHistorySnapshot();
+  renderAllUserWires();
+  updateUndoRedoButtons();
+}
+
+// ==========================================
+// 画布缩放与平移 (Zoom & Pan)
+// ==========================================
+function updateTransform() {
+  dom.viewport.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.scale})`;
+}
+
+function zoom(delta, clientX, clientY) {
+  const oldScale = state.scale;
+  let newScale = oldScale * delta;
+  newScale = Math.min(Math.max(0.35, newScale), 4.0);
+
+  const rect = dom.container.getBoundingClientRect();
+  const cx = clientX !== undefined ? clientX - rect.left : rect.width / 2;
+  const cy = clientY !== undefined ? clientY - rect.top : rect.height / 2;
+
+  state.panX = cx - (cx - state.panX) * (newScale / oldScale);
+  state.panY = cy - (cy - state.panY) * (newScale / oldScale);
+  state.scale = newScale;
+  updateTransform();
+}
+
+dom.container.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const delta = e.deltaY < 0 ? 1.12 : 0.89;
+  zoom(delta, e.clientX, e.clientY);
+}, { passive: false });
+
+function resetView() {
+  const rect = dom.container.getBoundingClientRect();
+  const svgW = 1400;
+  const svgH = 920;
+  const scaleX = (rect.width - 40) / svgW;
+  const scaleY = (rect.height - 40) / svgH;
+  state.scale = Math.min(scaleX, scaleY, 1.05);
+  state.panX = (rect.width - svgW * state.scale) / 2;
+  state.panY = (rect.height - svgH * state.scale) / 2;
+  updateTransform();
+}
+
+// ==========================================
+// 双击原位编辑任意文本
+// ==========================================
+function setupTextEditing() {
+  dom.svg.addEventListener('dblclick', (e) => {
+    const target = e.target;
+    if (target.tagName.toLowerCase() === 'text' && target.classList.contains('editable')) {
+      e.stopPropagation();
       e.preventDefault();
-      if (routeType === 'polyline' && drawPoints.length >= 2) {
-        finishActiveDrawing();
-      } else {
-        cancelActiveDrawing();
-      }
-    }
-  });
 
-  // 双击事件：在折线模式完成折线，在编辑模式修改文字或线上标签
-  svg.addEventListener('dblclick', (e) => {
-    if (currentMode === 'draw' && routeType === 'polyline' && isDrawing) {
-      e.stopPropagation();
-      finishActiveDrawing();
-      return;
-    }
+      const currentText = target.textContent;
+      const bcr = target.getBoundingClientRect();
+      const containerBcr = dom.container.getBoundingClientRect();
 
-    if (currentMode === 'view') return;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'text-editing-input';
+      input.value = currentText;
+      input.style.left = (bcr.left - containerBcr.left - 4) + 'px';
+      input.style.top = (bcr.top - containerBcr.top - 4) + 'px';
+      input.style.width = Math.max(bcr.width + 24, 90) + 'px';
 
-    if (e.target.tagName.toLowerCase() === 'text') {
-      currentEditingTextElement = e.target;
-      input.value = currentEditingTextElement.textContent.trim();
-      modal.style.display = 'block';
-      modal.style.left = `${Math.min(e.clientX, window.innerWidth - 360)}px`;
-      modal.style.top = `${Math.min(e.clientY - 20, window.innerHeight - 80)}px`;
+      dom.container.appendChild(input);
       input.focus();
       input.select();
+
+      function commitChange() {
+        if (input.parentNode) {
+          const val = input.value.trim();
+          if (val) target.textContent = val;
+          input.remove();
+          saveHistorySnapshot();
+        }
+      }
+
+      input.addEventListener('blur', commitChange);
+      input.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') {
+          commitChange();
+        } else if (ev.key === 'Escape') {
+          input.remove();
+        }
+      });
+    }
+  });
+}
+
+// ==========================================
+// 导出 PNG 与矢量 SVG
+// ==========================================
+function exportSVG() {
+  // 临时隐藏交互指示
+  dom.snapIndicator.style.display = 'none';
+  dom.previewWire.style.display = 'none';
+
+  const serializer = new XMLSerializer();
+  let source = serializer.serializeToString(dom.svg);
+  if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+    source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+  }
+  const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `AB门互锁接线图_魔点控制器_${new Date().toISOString().slice(0,10)}.svg`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportPNG() {
+  dom.snapIndicator.style.display = 'none';
+  dom.previewWire.style.display = 'none';
+
+  const serializer = new XMLSerializer();
+  let source = serializer.serializeToString(dom.svg);
+  const svgBlob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+  const URLObj = window.URL || window.webkitURL || window;
+  const blobURL = URLObj.createObjectURL(svgBlob);
+
+  const img = new Image();
+  img.onload = function() {
+    const canvas = document.createElement('canvas');
+    const scaleFactor = 2.0; // 2x 超高清
+    canvas.width = 1400 * scaleFactor;
+    canvas.height = 920 * scaleFactor;
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.scale(scaleFactor, scaleFactor);
+    ctx.drawImage(img, 0, 0);
+
+    const pngUrl = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = pngUrl;
+    a.download = `AB门互锁接线图_魔点控制器_${new Date().toISOString().slice(0,10)}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URLObj.revokeObjectURL(blobURL);
+  };
+  img.src = blobURL;
+}
+
+// ==========================================
+// 初始化绑定
+// ==========================================
+function init() {
+  // 模式切换
+  dom.btnDrawMode.addEventListener('click', () => setInteractionMode('draw'));
+  dom.btnSelectMode.addEventListener('click', () => setInteractionMode('select'));
+
+  // 走线设置
+  dom.selectLineMode.addEventListener('change', (e) => state.lineMode = e.target.value);
+  dom.selectLineWidth.addEventListener('change', (e) => state.lineWidth = parseFloat(e.target.value));
+  dom.selectLineDash.addEventListener('change', (e) => state.lineDash = e.target.value);
+  dom.selectArrow.addEventListener('change', (e) => state.arrowMode = e.target.value);
+  dom.checkSnap.addEventListener('change', (e) => state.snapEnabled = e.target.checked);
+
+  // 颜色选择
+  document.querySelectorAll('.color-swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      state.lineColor = sw.dataset.color;
+      dom.colorPicker.value = state.lineColor;
+      if (state.selectedWireId) {
+        const w = userWires.find(item => item.id === state.selectedWireId);
+        if (w) { w.color = state.lineColor; saveHistorySnapshot(); renderAllUserWires(); }
+      }
+    });
+  });
+
+  dom.colorPicker.addEventListener('input', (e) => {
+    state.lineColor = e.target.value;
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+    if (state.selectedWireId) {
+      const w = userWires.find(item => item.id === state.selectedWireId);
+      if (w) { w.color = state.lineColor; saveHistorySnapshot(); renderAllUserWires(); }
+    }
+  });
+
+  // 线上加字
+  dom.btnAddLineLabel.addEventListener('click', () => {
+    if (!state.selectedWireId) {
+      alert('请先在【编辑/选择】模式下点击选中一条导线！');
       return;
     }
-
-    const userGroup = e.target.closest ? e.target.closest('.user-wire-group') : null;
-    if (userGroup) {
-      selectElement(userGroup, true);
-      addLabelToSelectedWire();
-    }
-  });
-
-  // 键盘快捷键
-  window.addEventListener('keydown', (e) => {
-    if (modal.style.display === 'block' || document.activeElement.tagName === 'INPUT') return;
-
-    if (e.code === 'Space') {
-      isSpacePressed = true;
-      container.style.cursor = 'grab';
-    } else if (e.key === 'Escape') {
-      if (isDrawing) {
-        cancelActiveDrawing();
-      } else {
-        clearSelection();
+    const w = userWires.find(item => item.id === state.selectedWireId);
+    if (w) {
+      const text = prompt('请输入线上文字标注 (如: 闭门反馈信号):', w.label || '');
+      if (text !== null) {
+        w.label = text.trim();
+        saveHistorySnapshot();
+        renderAllUserWires();
       }
-    } else if (e.key === 'Enter' && isDrawing && routeType === 'polyline') {
-      finishActiveDrawing();
-    } else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedElement) {
-      e.preventDefault();
-      deleteSelectedElement();
-    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-      e.preventDefault();
-      if (e.shiftKey) redoAction();
-      else undoAction();
-    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
-      e.preventDefault();
-      redoAction();
-    } else if (!e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'l') {
-      setInteractionMode(currentMode === 'draw' ? 'edit' : 'draw');
-    } else if (!e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'v') {
-      setInteractionMode('edit');
     }
   });
 
-  window.addEventListener('keyup', (e) => {
-    if (e.code === 'Space') {
-      isSpacePressed = false;
-      container.style.cursor = currentMode === 'draw' ? 'crosshair' : 'grab';
-    }
-  });
-
-  // ==================== 缩放与文本编辑 ====================
-  function zoomIn() { scale = Math.min(scale * 1.25, 6); updateTransform(); }
-  function zoomOut() { scale = Math.max(scale / 1.25, 0.3); updateTransform(); }
-  function resetZoom() { scale = 1; posX = 0; posY = 0; updateTransform(); }
-
-  function confirmTextEdit() {
-    if (currentEditingTextElement) {
+  // 撤销 / 重做 / 删除
+  dom.btnUndo.addEventListener('click', undoAction);
+  dom.btnRedo.addEventListener('click', redoAction);
+  dom.btnDelete.addEventListener('click', deleteSelectedWire);
+  dom.btnClearAll.addEventListener('click', () => {
+    if (userWires.length === 0) return;
+    if (confirm('确定清空所有新增的自定义划线与标注吗？')) {
+      userWires = [];
+      state.selectedWireId = null;
       saveHistorySnapshot();
-      currentEditingTextElement.textContent = input.value;
-      const parentWire = currentEditingTextElement.closest('.user-wire-group');
-      if (parentWire) {
-        parentWire.setAttribute('data-label', input.value);
-      }
-    }
-    closeTextModal();
-  }
-
-  function closeTextModal() {
-    modal.style.display = 'none';
-    currentEditingTextElement = null;
-  }
-
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') confirmTextEdit();
-    if (e.key === 'Escape') closeTextModal();
-  });
-
-  function addCustomText() {
-    const textVal = prompt('请输入要添加的文字/备注说明：', '新增互锁备注说明');
-    if (!textVal) return;
-    saveHistorySnapshot();
-    const newText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    newText.setAttribute('class', 'editable');
-    newText.setAttribute('x', '640');
-    newText.setAttribute('y', '380');
-    newText.setAttribute('font-size', '14');
-    newText.setAttribute('fill', currentWireColor);
-    newText.setAttribute('font-weight', 'bold');
-    newText.setAttribute('text-anchor', 'middle');
-    newText.setAttribute('font-family', "'PingFang SC', sans-serif");
-    newText.textContent = textVal;
-    userTextsLayer.appendChild(newText);
-    if (currentMode !== 'edit') setInteractionMode('edit');
-    selectElement(newText, true);
-  }
-
-  // ==================== 导出 SVG 与高清 PNG ====================
-  function getCleanSerializedSVG() {
-    // 导出前隐藏临时辅助层与选中高亮
-    const prevOverlayDisplay = interactionOverlay.getAttribute('display');
-    interactionOverlay.setAttribute('display', 'none');
-    const prevSelected = selectedElement;
-    if (prevSelected) prevSelected.classList.remove('selected-wire');
-
-    const svgData = new XMLSerializer().serializeToString(svg);
-
-    if (prevOverlayDisplay) interactionOverlay.setAttribute('display', prevOverlayDisplay);
-    else interactionOverlay.removeAttribute('display');
-    if (prevSelected) prevSelected.classList.add('selected-wire');
-
-    return svgData;
-  }
-
-  function exportSVG() {
-    const svgData = getCleanSerializedSVG();
-    const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'AB门接线图_已编辑.svg';
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  function exportPNG() {
-    const svgData = getCleanSerializedSVG();
-    const canvas = document.createElement('canvas');
-    canvas.width = 2560; // 2x 超高清
-    canvas.height = 1560;
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(svgBlob);
-    
-    img.onload = () => {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      const pngUrl = canvas.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = pngUrl;
-      a.download = 'AB门接线图_已编辑高清.png';
-      a.click();
-      URL.revokeObjectURL(url);
-    };
-    img.src = url;
-  }
-
-  // 自适应初始窗口大小
-  window.addEventListener('DOMContentLoaded', () => {
-    const containerW = container.clientWidth;
-    const containerH = container.clientHeight;
-    if (containerW < 1320 || containerH < 820) {
-      scale = Math.max(Math.min(containerW / 1340, containerH / 830), 0.4);
-      updateTransform();
+      renderAllUserWires();
+      updateUndoRedoButtons();
     }
   });
+
+  // 缩放操作
+  dom.btnZoomIn.addEventListener('click', () => zoom(1.2));
+  dom.btnZoomOut.addEventListener('click', () => zoom(0.83));
+  dom.btnZoomReset.addEventListener('click', resetView);
+
+  // 导出
+  dom.btnExportPng.addEventListener('click', exportPNG);
+  dom.btnExportSvg.addEventListener('click', exportSVG);
+
+  setupTextEditing();
+  resetView();
+  window.addEventListener('resize', resetView);
+
+  // 初始化历史快照
+  saveHistorySnapshot();
+}
+
+window.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
