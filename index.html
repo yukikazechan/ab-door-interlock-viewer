@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
 <title>AB 门 (双门联动互锁) 接线示意图 - 在线编辑与预览工坊</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -18,19 +19,21 @@
   }
   header {
     background: #1e293b;
-    padding: 10px 20px;
+    padding: 8px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #334155;
-    z-index: 20;
+    z-index: 30;
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    gap: 10px;
+    flex-wrap: wrap;
   }
   .title-group h1 { font-size: 15px; font-weight: 600; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
   .title-group p { font-size: 11px; color: #94a3b8; margin-top: 2px; }
   .toolbar {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
     flex-wrap: wrap;
   }
@@ -38,28 +41,124 @@
     background: #334155;
     color: #f1f5f9;
     border: 1px solid #475569;
-    padding: 6px 12px;
+    padding: 5px 10px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 12px;
     font-weight: 500;
-    transition: all 0.2s;
+    transition: all 0.18s;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
+    white-space: nowrap;
   }
-  button:hover, .btn:hover { background: #0284c7; border-color: #38bdf8; color: #fff; }
+  button svg.icon, .btn svg.icon {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    flex-shrink: 0;
+  }
+  button:hover:not(:disabled), .btn:hover { background: #0284c7; border-color: #38bdf8; color: #fff; }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
   button.active {
     background: #0ea5e9;
     border-color: #38bdf8;
     color: #fff;
     box-shadow: 0 0 10px rgba(14, 165, 233, 0.4);
   }
+  button.draw-active {
+    background: #f59e0b;
+    border-color: #fbbf24;
+    color: #0f172a;
+    font-weight: 600;
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+  }
   .btn-green { background: #15803d; border-color: #22c55e; }
-  .btn-green:hover { background: #16a34a; }
+  .btn-green:hover:not(:disabled) { background: #16a34a; border-color: #4ade80; }
   .btn-blue { background: #2563eb; border-color: #3b82f6; }
-  .btn-blue:hover { background: #1d4ed8; }
+  .btn-blue:hover:not(:disabled) { background: #1d4ed8; border-color: #60a5fa; }
+  .btn-danger { background: #991b1b; border-color: #ef4444; color: #fecaca; }
+  .btn-danger:hover:not(:disabled) { background: #dc2626; border-color: #f87171; color: #fff; }
+
+  .divider { width: 1px; height: 18px; background: #475569; margin: 0 2px; }
+
+  /* 二级划线属性工具栏 */
+  #draw-toolbar {
+    background: #162032;
+    border-bottom: 1px solid #334155;
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    z-index: 25;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #cbd5e1;
+  }
+  .tool-section {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .tool-label {
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 1px;
+  }
+  .color-swatch {
+    width: 19px;
+    height: 19px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+    padding: 0;
+  }
+  .color-swatch:hover { transform: scale(1.15); }
+  .color-swatch.selected {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px #0ea5e9;
+    transform: scale(1.1);
+  }
+  #custom-color-picker {
+    width: 22px;
+    height: 21px;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+  }
+  select.tool-select {
+    background: #0f172a;
+    color: #f1f5f9;
+    border: 1px solid #475569;
+    border-radius: 5px;
+    padding: 4px 6px;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+  }
+  select.tool-select:focus { border-color: #38bdf8; }
+  .snap-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #cbd5e1;
+    background: #0f172a;
+    padding: 4px 8px;
+    border-radius: 5px;
+    border: 1px solid #475569;
+  }
+  .snap-toggle input { cursor: pointer; accent-color: #0ea5e9; }
 
   #workspace {
     flex: 1;
@@ -72,6 +171,10 @@
     height: 100%;
     position: relative;
     overflow: hidden;
+    cursor: grab;
+  }
+  #viewer-container.drawing-cursor {
+    cursor: crosshair !important;
   }
   #svg-wrapper {
     position: absolute;
@@ -80,27 +183,46 @@
     transform-origin: center center;
     transition: transform 0.05s ease-out;
   }
-  svg {
+  #main-svg {
     box-shadow: 0 15px 50px rgba(0,0,0,0.7);
     border-radius: 8px;
     background: #ffffff;
+    display: block;
   }
 
   /* 可编辑状态高亮 */
   .editing text {
-    cursor: text !important;
+    cursor: move;
   }
   .editing text:hover {
     outline: 2px dashed #0284c7;
     fill: #0284c7 !important;
   }
-  
+  .drawing-mode text {
+    pointer-events: none;
+  }
+
+  /* 线条交互样式 */
+  .wire-line, #user-lines-layer path, #user-lines-layer line, #user-lines-layer polyline {
+    cursor: pointer;
+    transition: filter 0.12s;
+  }
+  .editing .wire-line:hover,
+  .editing #user-lines-layer .user-wire-group:hover path,
+  .editing #user-lines-layer .user-wire-group:hover line,
+  .editing #user-lines-layer .user-wire-group:hover polyline {
+    filter: drop-shadow(0 0 4px rgba(14, 165, 233, 0.75));
+  }
+  .selected-wire {
+    filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.95)) !important;
+  }
+
   .banner-tip {
     position: absolute;
     top: 12px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(15, 23, 42, 0.88);
+    background: rgba(15, 23, 42, 0.92);
     border: 1px solid #0284c7;
     padding: 6px 18px;
     border-radius: 20px;
@@ -109,7 +231,15 @@
     pointer-events: none;
     backdrop-filter: blur(6px);
     z-index: 10;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    white-space: nowrap;
+    max-width: 92vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .banner-tip.draw-banner {
+    border-color: #f59e0b;
+    color: #fbbf24;
   }
 
   /* 浮动在线编辑弹窗 */
@@ -131,58 +261,147 @@
     border-radius: 4px;
     font-size: 13px;
     outline: none;
-    width: 220px;
+    width: 240px;
   }
   #text-editor-modal button {
     padding: 6px 10px;
     margin-left: 6px;
+  }
+
+  /* 底部快捷键提示条 */
+  #shortcut-hint {
+    position: absolute;
+    bottom: 10px;
+    right: 14px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid #334155;
+    color: #94a3b8;
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    z-index: 10;
+    pointer-events: none;
   }
 </style>
 </head>
 <body>
 <header>
   <div class="title-group">
-    <h1>📐 AB 门接线示意图 · 在线交互工坊 <span id="mode-badge" style="font-size:11px; background:#334155; padding:2px 8px; border-radius:12px; color:#94a3b8;">查看模式</span></h1>
-    <p>双击任意文字直接修改 ｜ 鼠标拖拽平移与滚轮缩放 ｜ 实时导出高清图/SVG</p>
+    <h1>
+      <svg class="icon" style="width:16px;height:16px;stroke:#38bdf8;stroke-width:2;fill:none;" viewBox="0 0 24 24"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7H3l2-4h14l2 4M5 21V10.85M19 21V10.85"/></svg>
+      AB 门接线示意图 · 在线交互工坊
+      <span id="mode-badge" style="font-size:11px; background:#0ea5e9; padding:2px 8px; border-radius:12px; color:#fff;">编辑模式</span>
+    </h1>
+    <p>支持在线划线/连线 ｜ 双击文字改字 ｜ 拖拽移动文本与调整端点 ｜ 实时导出高清 PNG/SVG</p>
   </div>
   <div class="toolbar">
-    <button id="toggle-edit-btn" onclick="toggleEditMode()" class="active">✏️ 编辑模式 (双击改字)</button>
-    <button onclick="addCustomText()">➕ 添加文本</button>
-    <div style="width:1px; height:18px; background:#475569; margin:0 4px;"></div>
-    <button onclick="zoomIn()">➕ 放大</button>
-    <button onclick="zoomOut()">➖ 缩小</button>
-    <button onclick="resetZoom()">↺ 复位</button>
-    <div style="width:1px; height:18px; background:#475569; margin:0 4px;"></div>
-    <button onclick="exportPNG()" class="btn-green">🖼️ 导出修改后的图片</button>
-    <button onclick="exportSVG()" class="btn-blue">🎨 导出矢量 SVG</button>
+    <button id="toggle-edit-btn" onclick="setInteractionMode('edit')" class="active" title="选择/移动/双击修改文字与线条">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> 编辑/选择
+    </button>
+    <button id="toggle-draw-btn" onclick="setInteractionMode('draw')" title="在图上点击或拖拽绘制接线/互锁连线">
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 6h5v12h5"/></svg> 划线/连线
+    </button>
+    <button id="toggle-view-btn" onclick="setInteractionMode('view')" title="纯浏览平移模式">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg> 浏览模式
+    </button>
+    <div class="divider"></div>
+    <button onclick="addCustomText()" title="在画布中添加自定义文字标注">＋ 添加文本</button>
+    <button id="undo-btn" onclick="undoAction()" disabled title="撤销上一步操作 (Ctrl+Z)">↩ 撤销</button>
+    <button id="redo-btn" onclick="redoAction()" disabled title="重做操作 (Ctrl+Y)">↪ 重做</button>
+    <div class="divider"></div>
+    <button onclick="zoomIn()" title="放大画布">＋ 放大</button>
+    <button onclick="zoomOut()" title="缩小画布">－ 缩小</button>
+    <button onclick="resetZoom()" title="复位视图缩放与位置">↺ 复位</button>
+    <div class="divider"></div>
+    <button onclick="exportPNG()" class="btn-green">
+      <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg> 导出修改后的图片
+    </button>
+    <button onclick="exportSVG()" class="btn-blue">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> 导出矢量 SVG
+    </button>
     <a href="https://apan.arikacips.cyou/dav/google%20ar1kka/little%20meow/AB_Door_Interlock_Wiring_Diagram.dxf" download class="btn">
-      💾 原版 CAD (.dxf)
+      <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> 原版 CAD (.dxf)
     </a>
   </div>
 </header>
 
+<!-- 划线与线条编辑属性栏 -->
+<div id="draw-toolbar">
+  <div class="tool-section">
+    <span class="tool-label">走线：</span>
+    <button id="route-orthogonal" class="route-btn active" onclick="setRouteType('orthogonal')" title="自动直角折线 (适合端子接线)">↱ 直角折线</button>
+    <button id="route-straight" class="route-btn" onclick="setRouteType('straight')" title="两点直接连线">╱ 直线</button>
+    <button id="route-polyline" class="route-btn" onclick="setRouteType('polyline')" title="连续点击绘制多拐点折线，双击或按回车完成">⟿ 多段折线</button>
+
+    <div class="divider"></div>
+    <span class="tool-label">颜色：</span>
+    <button class="color-swatch selected" style="background:#dc2626;" data-color="#dc2626" onclick="selectWireColor('#dc2626', this)" title="电源正极红 (#dc2626)"></button>
+    <button class="color-swatch" style="background:#64748b;" data-color="#64748b" onclick="selectWireColor('#64748b', this)" title="公共端GND灰 (#64748b)"></button>
+    <button class="color-swatch" style="background:#16a34a;" data-color="#16a34a" onclick="selectWireColor('#16a34a', this)" title="开门信号绿 (#16a34a)"></button>
+    <button class="color-swatch" style="background:#0284c7;" data-color="#0284c7" onclick="selectWireColor('#0284c7', this)" title="互锁联动蓝 (#0284c7)"></button>
+    <button class="color-swatch" style="background:#f97316;" data-color="#f97316" onclick="selectWireColor('#f97316', this)" title="RS485-A橙 (#f97316)"></button>
+    <button class="color-swatch" style="background:#9333ea;" data-color="#9333ea" onclick="selectWireColor('#9333ea', this)" title="RS485-B紫 (#9333ea)"></button>
+    <button class="color-swatch" style="background:#0f172a;" data-color="#0f172a" onclick="selectWireColor('#0f172a', this)" title="深黑 (#0f172a)"></button>
+    <input type="color" id="custom-color-picker" value="#dc2626" onchange="selectWireColor(this.value, null)" title="自定义线条颜色">
+
+    <div class="divider"></div>
+    <span class="tool-label">粗细：</span>
+    <select id="wire-width-select" class="tool-select" onchange="updateSelectedWireStyle()">
+      <option value="1.5">1.5 px (细)</option>
+      <option value="2" selected>2.0 px (标准)</option>
+      <option value="2.8">2.8 px (加粗)</option>
+      <option value="4">4.0 px (主干)</option>
+    </select>
+
+    <span class="tool-label">样式：</span>
+    <select id="wire-dash-select" class="tool-select" onchange="updateSelectedWireStyle()">
+      <option value="none" selected>─── 实线</option>
+      <option value="7,5">- - - 虚线</option>
+      <option value="2,4">······ 点线</option>
+    </select>
+
+    <span class="tool-label">端点：</span>
+    <select id="wire-marker-select" class="tool-select" onchange="updateSelectedWireStyle()">
+      <option value="dots" selected>●─● 两端接线点</option>
+      <option value="arrow-end">──► 单向箭头</option>
+      <option value="arrow-both">◄─► 双向箭头</option>
+      <option value="none">─── 无端点</option>
+    </select>
+
+    <label class="snap-toggle" title="靠近端子或节点时自动吸附对齐">
+      <input type="checkbox" id="snap-checkbox" checked> 端子吸附
+    </label>
+  </div>
+
+  <div class="tool-section">
+    <button id="add-wire-label-btn" onclick="addLabelToSelectedWire()" disabled title="为当前选中的线条添加文字说明">＋ 线上加字</button>
+    <button id="delete-selected-btn" onclick="deleteSelectedElement()" class="btn-danger" disabled title="删除当前选中的线条或文字 (Delete / Backspace)">✕ 删除选中</button>
+    <button onclick="clearUserWires()" title="清空所有新增的自定义线条">↺ 清空新增线</button>
+  </div>
+</div>
+
 <div id="workspace">
-  <div class="banner-tip" id="status-tip">💡 当前为【编辑模式】：直接【双击图上任何文字】即可打字修改！修改完可一键导出！</div>
+  <div class="banner-tip" id="status-tip">当前为【编辑模式】：双击文字可修改内容，点击线条可选中改色/删线，点击顶部【划线/连线】即可在任意位置画线！</div>
 
   <div id="viewer-container">
     <div id="svg-wrapper" class="editing">
       <!-- 完整矢量接线图 -->
       <svg id="main-svg" width="1280" height="780" viewBox="0 0 1280 780" xmlns="http://www.w3.org/2000/svg">
-        <defs>
+        <defs id="svg-defs">
           <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
             <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.08"/>
           </filter>
         </defs>
         
         <!-- 背景白底 -->
-        <rect width="1280" height="780" fill="#ffffff"/>
+        <rect id="bg-rect" width="1280" height="780" fill="#ffffff"/>
         
         <!-- 标题 -->
         <text class="editable" x="640" y="45" font-size="22" font-weight="bold" fill="#0f172a" text-anchor="middle" font-family="'PingFang SC', 'Microsoft YaHei', sans-serif">AB 门 (双门联动互锁) 接线示意图</text>
         <text class="editable" x="640" y="72" font-size="12" fill="#64748b" text-anchor="middle">联动门控制主机 BJRANDE-760 ｜ 内门 / 外门双通道 ｜ 门禁设备×2 · 开门按钮×2 · 电锁×2 · 12V2A 电源×2 · 摄像头×1</text>
         
         <!-- 设备框 -->
-        <g stroke="#334155" stroke-width="1.2" fill="#f8fafc" rx="6" filter="url(#shadow)">
+        <g id="device-boxes" stroke="#334155" stroke-width="1.2" fill="#f8fafc" rx="6" filter="url(#shadow)">
           <rect x="40" y="95" width="240" height="150" rx="6"/>
           <rect x="1000" y="95" width="240" height="150" rx="6"/>
           <rect x="420" y="95" width="440" height="175" rx="6"/>
@@ -278,20 +497,44 @@
           <text class="editable" x="805" y="255" text-anchor="middle">公共端 GND</text>
         </g>
         
-        <!-- 导线 (分色绘制) -->
-        <g stroke-width="1.8">
-          <line x1="260" y1="150" x2="435" y2="150" stroke="#dc2626"/>
-          <line x1="260" y1="175" x2="435" y2="175" stroke="#64748b"/>
-          <line x1="260" y1="200" x2="435" y2="200" stroke="#dc2626"/>
-          <line x1="260" y1="225" x2="435" y2="225" stroke="#64748b"/>
+        <!-- 预设导线层 (支持点击选中编辑或删除) -->
+        <g id="preset-wires">
+          <g stroke-width="1.8">
+            <line class="wire-line" x1="260" y1="150" x2="435" y2="150" stroke="#dc2626"/>
+            <line class="wire-line" x1="260" y1="175" x2="435" y2="175" stroke="#64748b"/>
+            <line class="wire-line" x1="260" y1="200" x2="435" y2="200" stroke="#dc2626"/>
+            <line class="wire-line" x1="260" y1="225" x2="435" y2="225" stroke="#64748b"/>
+            
+            <line class="wire-line" x1="845" y1="150" x2="1020" y2="150" stroke="#dc2626"/>
+            <line class="wire-line" x1="845" y1="175" x2="1020" y2="175" stroke="#64748b"/>
+            <line class="wire-line" x1="845" y1="200" x2="1020" y2="200" stroke="#dc2626"/>
+            <line class="wire-line" x1="845" y1="225" x2="1020" y2="225" stroke="#64748b"/>
+            
+            <line class="wire-line" x1="260" y1="325" x2="435" y2="325" stroke="#64748b"/>
+            <line class="wire-line" x1="845" y1="325" x2="1020" y2="325" stroke="#64748b"/>
+          </g>
           
-          <line x1="845" y1="150" x2="1020" y2="150" stroke="#dc2626"/>
-          <line x1="845" y1="175" x2="1020" y2="175" stroke="#64748b"/>
-          <line x1="845" y1="200" x2="1020" y2="200" stroke="#dc2626"/>
-          <line x1="845" y1="225" x2="1020" y2="225" stroke="#64748b"/>
+          <!-- 开门信号线 (绿色 #16a34a) -->
+          <g stroke="#16a34a" stroke-width="2" fill="none">
+            <path class="wire-line" d="M 260 350 L 300 350 L 300 586 L 260 586"/>
+            <path class="wire-line" d="M 300 520 L 545 520 L 545 270"/>
+            <path class="wire-line" d="M 1020 350 L 980 350 L 980 586 L 1020 586"/>
+            <path class="wire-line" d="M 980 520 L 735 520 L 735 270"/>
+          </g>
           
-          <line x1="260" y1="325" x2="435" y2="325" stroke="#64748b"/>
-          <line x1="845" y1="325" x2="1020" y2="325" stroke="#64748b"/>
+          <!-- 门禁 COM 接公共端 GND (灰色) -->
+          <g stroke="#64748b" stroke-width="1.8" fill="none">
+            <path class="wire-line" d="M 260 615 L 360 615 L 360 550 L 475 550 L 475 270"/>
+            <path class="wire-line" d="M 1020 615 L 920 615 L 920 550 L 805 550 L 805 270"/>
+          </g>
+          
+          <!-- RS485 总线 -->
+          <g stroke-width="2.2" fill="none">
+            <path class="wire-line" d="M 110 645 L 110 740 L 1070 740 L 1070 645" stroke="#f97316"/>
+            <path class="wire-line" d="M 605 705 L 605 740" stroke="#f97316"/>
+            <path class="wire-line" d="M 190 645 L 190 755 L 1150 755 L 1150 645" stroke="#9333ea"/>
+            <path class="wire-line" d="M 685 705 L 685 755" stroke="#9333ea"/>
+          </g>
         </g>
         
         <!-- 导线文字标注 (可编辑) -->
@@ -309,22 +552,6 @@
           <text class="editable" x="345" y="320">按钮 COM → 公共端 GND</text>
           <text class="editable" x="935" y="320">按钮 COM → 公共端 GND</text>
         </g>
-        
-        <!-- 开门信号线 (绿色 #16a34a) -->
-        <g stroke="#16a34a" stroke-width="2" fill="none">
-          <path d="M 260 350 L 300 350 L 300 586 L 260 586"/>
-          <path d="M 300 520 L 545 520 L 545 270"/>
-          <path d="M 1020 350 L 980 350 L 980 586 L 1020 586"/>
-          <path d="M 980 520 L 735 520 L 735 270"/>
-        </g>
-        
-        <!-- 门禁 COM 接公共端 GND (灰色) -->
-        <g stroke="#64748b" stroke-width="1.8" fill="none">
-          <path d="M 260 615 L 360 615 L 360 550 L 475 550 L 475 270"/>
-          <path d="M 1020 615 L 920 615 L 920 550 L 805 550 L 805 270"/>
-        </g>
-        
-        <!-- 标注 -->
         <g font-family="'PingFang SC', sans-serif" font-size="10" fill="#16a34a">
           <text class="editable" x="375" y="513">门禁设备 NO → 按钮 (内门)</text>
           <text class="editable" x="815" y="513">门禁设备 NO → 按钮 (外门)</text>
@@ -333,34 +560,51 @@
           <text class="editable" x="385" y="543">门禁设备 COM → 公共端 GND</text>
           <text class="editable" x="825" y="543">门禁设备 COM → 公共端 GND</text>
         </g>
-        
-        <!-- RS485 总线 -->
-        <g stroke-width="2.2" fill="none">
-          <path d="M 110 645 L 110 740 L 1070 740 L 1070 645" stroke="#f97316"/>
-          <path d="M 605 705 L 605 740" stroke="#f97316"/>
-          <path d="M 190 645 L 190 755 L 1150 755 L 1150 645" stroke="#9333ea"/>
-          <path d="M 685 705 L 685 755" stroke="#9333ea"/>
-        </g>
         <text class="editable" x="640" y="733" font-family="'PingFang SC', sans-serif" font-size="11" fill="#ea580c" text-anchor="middle">RS-485 通讯总线 (A 接 A、B 接 B，双绞屏蔽线，屏蔽层单端接地)</text>
         
-        <!-- 节点实心圆圈 -->
-        <g fill="#0f172a">
+        <!-- 节点实心圆圈 (端子吸附点) -->
+        <g id="terminal-nodes" fill="#0f172a">
           <circle cx="260" cy="150" r="3"/><circle cx="260" cy="175" r="3"/><circle cx="260" cy="200" r="3"/><circle cx="260" cy="225" r="3"/>
           <circle cx="435" cy="150" r="3"/><circle cx="435" cy="175" r="3"/><circle cx="435" cy="200" r="3"/><circle cx="435" cy="225" r="3"/>
           <circle cx="1020" cy="150" r="3"/><circle cx="1020" cy="175" r="3"/><circle cx="1020" cy="200" r="3"/><circle cx="1020" cy="225" r="3"/>
           <circle cx="845" cy="150" r="3"/><circle cx="845" cy="175" r="3"/><circle cx="845" cy="200" r="3"/><circle cx="845" cy="225" r="3"/>
           <circle cx="260" cy="325" r="3"/><circle cx="260" cy="350" r="3"/><circle cx="435" cy="325" r="3"/>
           <circle cx="1020" cy="325" r="3"/><circle cx="1020" cy="350" r="3"/><circle cx="845" cy="325" r="3"/>
+          <!-- 12V2A 电源适配器与门禁电源端子节点 -->
+          <circle cx="95" cy="462" r="3"/><circle cx="222" cy="462" r="3"/>
+          <circle cx="1055" cy="462" r="3"/><circle cx="1182" cy="462" r="3"/>
+          <circle cx="95" cy="545" r="3"/><circle cx="222" cy="545" r="3"/>
+          <circle cx="1055" cy="545" r="3"/><circle cx="1182" cy="545" r="3"/>
           <circle cx="260" cy="586" r="3"/><circle cx="260" cy="615" r="3"/>
           <circle cx="1020" cy="586" r="3"/><circle cx="1020" cy="615" r="3"/>
+          <circle cx="110" cy="645" r="3"/><circle cx="190" cy="645" r="3"/>
+          <circle cx="1070" cy="645" r="3"/><circle cx="1150" cy="645" r="3"/>
+          <circle cx="605" cy="705" r="3"/><circle cx="685" cy="705" r="3"/>
           <circle cx="475" cy="270" r="3"/><circle cx="545" cy="270" r="3"/><circle cx="735" cy="270" r="3"/><circle cx="805" cy="270" r="3"/>
           <circle cx="300" cy="520" r="4.5" fill="#16a34a"/>
           <circle cx="980" cy="520" r="4.5" fill="#16a34a"/>
           <circle cx="605" cy="740" r="4" fill="#f97316"/>
           <circle cx="685" cy="755" r="4" fill="#9333ea"/>
         </g>
+
+        <!-- 用户新增连线与标注图层 -->
+        <g id="user-lines-layer"></g>
+        <g id="user-texts-layer"></g>
+
+        <!-- 交互辅助层 (导出时自动隐藏) -->
+        <g id="interaction-overlay" pointer-events="none">
+          <circle id="snap-indicator" cx="-100" cy="-100" r="7" fill="rgba(14, 165, 233, 0.2)" stroke="#0ea5e9" stroke-width="2" display="none"/>
+          <path id="preview-wire" d="" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="5,4" display="none"/>
+          <circle id="preview-start-dot" cx="-100" cy="-100" r="4" fill="#dc2626" display="none"/>
+          <circle id="preview-end-dot" cx="-100" cy="-100" r="4" fill="#dc2626" display="none"/>
+          <g id="selection-handles"></g>
+        </g>
       </svg>
     </div>
+  </div>
+
+  <div id="shortcut-hint">
+    快捷键：<b>L</b> 切换划线 ｜ <b>V</b> 编辑/选择 ｜ <b>Esc</b> 取消当前划线 ｜ <b>Delete</b> 删除选中 ｜ <b>Ctrl+Z</b> 撤销 ｜ <b>空格+拖拽</b> 平移画布
   </div>
 </div>
 
@@ -372,23 +616,616 @@
 </div>
 
 <script>
+  // ==================== 全局视图与交互状态 ====================
   let scale = 1;
   let posX = 0, posY = 0;
-  let isDragging = false;
-  let startX, startY;
-  let isEditMode = true;
+  let isPanning = false;
+  let panStartX = 0, panStartY = 0;
+  let isSpacePressed = false;
+
+  // 模式: 'edit' | 'draw' | 'view'
+  let currentMode = 'edit';
+  // 走线类型: 'orthogonal' | 'straight' | 'polyline'
+  let routeType = 'orthogonal';
+  let currentWireColor = '#dc2626';
+
+  // 划线状态
+  let isDrawing = false;
+  let isLeftMouseDown = false;
+  let drawPoints = []; // [{x, y}, ...]
+  let mouseDownSvgPt = null;
+  let hasDraggedDuringDraw = false;
+
+  // 选中与拖拽元素状态
+  let selectedElement = null; // 选中的 .user-wire-group, .wire-line, 或 text.editable
+  let isExplicitlySelected = false; // 区分用户主动点击选中 vs 画完线自动选中
+  let draggingTextEl = null;
+  let textDragOffset = { x: 0, y: 0 };
+  let draggingHandleInfo = null; // { wireGroup, pointIndex }
+
+  // 文本弹窗编辑
   let currentEditingTextElement = null;
 
+  // 历史记录栈 (Undo / Redo)
+  const historyStack = [];
+  const redoStack = [];
+  const MAX_HISTORY = 40;
+
+  const svg = document.getElementById('main-svg');
   const wrapper = document.getElementById('svg-wrapper');
   const container = document.getElementById('viewer-container');
   const modal = document.getElementById('text-editor-modal');
   const input = document.getElementById('modal-text-input');
+  const userLinesLayer = document.getElementById('user-lines-layer');
+  const userTextsLayer = document.getElementById('user-texts-layer');
+  const interactionOverlay = document.getElementById('interaction-overlay');
+  const snapIndicator = document.getElementById('snap-indicator');
+  const previewWire = document.getElementById('preview-wire');
+  const previewStartDot = document.getElementById('preview-start-dot');
+  const previewEndDot = document.getElementById('preview-end-dot');
+  const selectionHandles = document.getElementById('selection-handles');
 
+  // ==================== 坐标转换与端子吸附 ====================
+  function clientToSvgPoint(clientX, clientY) {
+    const pt = svg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return { x: 0, y: 0 };
+    const transformed = pt.matrixTransform(ctm.inverse());
+    return {
+      x: Math.round(transformed.x * 10) / 10,
+      y: Math.round(transformed.y * 10) / 10
+    };
+  }
+
+  function getAllSnapPoints() {
+    const pts = [];
+    // 收集所有端子圆点
+    svg.querySelectorAll('#terminal-nodes circle').forEach(c => {
+      pts.push({
+        x: parseFloat(c.getAttribute('cx')),
+        y: parseFloat(c.getAttribute('cy'))
+      });
+    });
+    // 收集所有用户已画线条的端点
+    userLinesLayer.querySelectorAll('.user-wire-group').forEach(g => {
+      const raw = g.getAttribute('data-points');
+      if (raw) {
+        try {
+          const arr = JSON.parse(raw);
+          arr.forEach(p => pts.push({ x: p.x, y: p.y }));
+        } catch (e) {}
+      }
+    });
+    return pts;
+  }
+
+  function getSnappedPoint(clientX, clientY, shiftKey = false, refPoint = null) {
+    let pt = clientToSvgPoint(clientX, clientY);
+    const snapEnabled = document.getElementById('snap-checkbox').checked;
+
+    if (snapEnabled) {
+      const snapPts = getAllSnapPoints();
+      let bestDist = 13; // 吸附半径 (SVG像素)
+      let bestPt = null;
+      for (const sp of snapPts) {
+        const d = Math.hypot(sp.x - pt.x, sp.y - pt.y);
+        if (d < bestDist) {
+          bestDist = d;
+          bestPt = sp;
+        }
+      }
+      if (bestPt) {
+        snapIndicator.setAttribute('cx', bestPt.x);
+        snapIndicator.setAttribute('cy', bestPt.y);
+        snapIndicator.setAttribute('display', 'block');
+        return { x: bestPt.x, y: bestPt.y, snapped: true };
+      }
+    }
+
+    snapIndicator.setAttribute('display', 'none');
+
+    // 按住 Shift 键时水平/垂直正交锁定
+    if (shiftKey && refPoint) {
+      const dx = Math.abs(pt.x - refPoint.x);
+      const dy = Math.abs(pt.y - refPoint.y);
+      if (dx > dy) {
+        pt.y = refPoint.y;
+      } else {
+        pt.x = refPoint.x;
+      }
+    }
+
+    return { x: Math.round(pt.x), y: Math.round(pt.y), snapped: false };
+  }
+
+  // ==================== 历史记录 (撤销/重做) ====================
+  function saveHistorySnapshot() {
+    const state = {
+      userLines: userLinesLayer.innerHTML,
+      userTexts: userTextsLayer.innerHTML,
+      presetWires: document.getElementById('preset-wires').innerHTML
+    };
+    historyStack.push(state);
+    if (historyStack.length > MAX_HISTORY) historyStack.shift();
+    redoStack.length = 0;
+    updateUndoRedoButtons();
+  }
+
+  function restoreSnapshot(state) {
+    clearSelection();
+    userLinesLayer.innerHTML = state.userLines;
+    userTextsLayer.innerHTML = state.userTexts;
+    document.getElementById('preset-wires').innerHTML = state.presetWires;
+    updateUndoRedoButtons();
+  }
+
+  function undoAction() {
+    if (historyStack.length === 0) return;
+    const currentState = {
+      userLines: userLinesLayer.innerHTML,
+      userTexts: userTextsLayer.innerHTML,
+      presetWires: document.getElementById('preset-wires').innerHTML
+    };
+    redoStack.push(currentState);
+    const prevState = historyStack.pop();
+    restoreSnapshot(prevState);
+  }
+
+  function redoAction() {
+    if (redoStack.length === 0) return;
+    const currentState = {
+      userLines: userLinesLayer.innerHTML,
+      userTexts: userTextsLayer.innerHTML,
+      presetWires: document.getElementById('preset-wires').innerHTML
+    };
+    historyStack.push(currentState);
+    const nextState = redoStack.pop();
+    restoreSnapshot(nextState);
+  }
+
+  function updateUndoRedoButtons() {
+    document.getElementById('undo-btn').disabled = historyStack.length === 0;
+    document.getElementById('redo-btn').disabled = redoStack.length === 0;
+  }
+
+  // ==================== 箭头 Marker 动态生成 ====================
+  function ensureArrowMarker(color, isStart = false) {
+    const cleanHex = color.replace(/[^a-zA-Z0-9]/g, '');
+    const id = `arrow-${isStart ? 'start' : 'end'}-${cleanHex}`;
+    const defs = document.getElementById('svg-defs');
+    if (!document.getElementById(id)) {
+      const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+      marker.setAttribute('id', id);
+      marker.setAttribute('viewBox', '0 0 10 10');
+      marker.setAttribute('refX', isStart ? '2' : '8');
+      marker.setAttribute('refY', '5');
+      marker.setAttribute('markerWidth', '6');
+      marker.setAttribute('markerHeight', '6');
+      marker.setAttribute('orient', 'auto');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', isStart ? 'M 10 1 L 1 5 L 10 9 z' : 'M 0 1 L 9 5 L 0 9 z');
+      path.setAttribute('fill', color);
+      marker.appendChild(path);
+      defs.appendChild(marker);
+    }
+    return `url(#${id})`;
+  }
+
+  // ==================== 路径计算与渲染 ====================
+  function computeOrthogonalPoints(p1, p2) {
+    if (p1.x === p2.x || p1.y === p2.y) {
+      return [p1, p2];
+    }
+    const dx = Math.abs(p2.x - p1.x);
+    const dy = Math.abs(p2.y - p1.y);
+    if (dx >= dy) {
+      const midX = Math.round((p1.x + p2.x) / 2);
+      return [p1, { x: midX, y: p1.y }, { x: midX, y: p2.y }, p2];
+    } else {
+      const midY = Math.round((p1.y + p2.y) / 2);
+      return [p1, { x: p1.x, y: midY }, { x: p2.x, y: midY }, p2];
+    }
+  }
+
+  function pointsToPathD(pts) {
+    if (!pts || pts.length === 0) return '';
+    return pts.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  }
+
+  function buildEffectivePoints(rawPoints, rType) {
+    if (!rawPoints || rawPoints.length < 2) return rawPoints || [];
+    if (rType === 'orthogonal' && rawPoints.length === 2) {
+      return computeOrthogonalPoints(rawPoints[0], rawPoints[1]);
+    }
+    return rawPoints;
+  }
+
+  function renderUserWireGroup(groupEl) {
+    const rawPoints = JSON.parse(groupEl.getAttribute('data-points') || '[]');
+    const rType = groupEl.getAttribute('data-route') || 'straight';
+    const color = groupEl.getAttribute('data-color') || '#dc2626';
+    const width = groupEl.getAttribute('data-width') || '2';
+    const dash = groupEl.getAttribute('data-dash') || 'none';
+    const markerType = groupEl.getAttribute('data-marker') || 'dots';
+    const labelText = groupEl.getAttribute('data-label') || '';
+
+    const effectivePts = buildEffectivePoints(rawPoints, rType);
+    const d = pointsToPathD(effectivePts);
+
+    groupEl.innerHTML = '';
+
+    // 透明宽热区方便鼠标点击选中
+    const hitPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    hitPath.setAttribute('d', d);
+    hitPath.setAttribute('fill', 'none');
+    hitPath.setAttribute('stroke', 'transparent');
+    hitPath.setAttribute('stroke-width', '12');
+    groupEl.appendChild(hitPath);
+
+    // 实际可见线段
+    const mainPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    mainPath.setAttribute('d', d);
+    mainPath.setAttribute('fill', 'none');
+    mainPath.setAttribute('stroke', color);
+    mainPath.setAttribute('stroke-width', width);
+    mainPath.setAttribute('stroke-linecap', 'round');
+    mainPath.setAttribute('stroke-linejoin', 'round');
+    if (dash && dash !== 'none') {
+      mainPath.setAttribute('stroke-dasharray', dash);
+    }
+    if (markerType === 'arrow-end' || markerType === 'arrow-both') {
+      mainPath.setAttribute('marker-end', ensureArrowMarker(color, false));
+    }
+    if (markerType === 'arrow-both') {
+      mainPath.setAttribute('marker-start', ensureArrowMarker(color, true));
+    }
+    groupEl.appendChild(mainPath);
+
+    // 两端实心接线圆点
+    if (markerType === 'dots' && effectivePts.length >= 2) {
+      const startPt = effectivePts[0];
+      const endPt = effectivePts[effectivePts.length - 1];
+      const r = Math.max(3, parseFloat(width) * 1.4);
+      [startPt, endPt].forEach(pt => {
+        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        c.setAttribute('cx', pt.x);
+        c.setAttribute('cy', pt.y);
+        c.setAttribute('r', r);
+        c.setAttribute('fill', color);
+        groupEl.appendChild(c);
+      });
+    }
+
+    // 线上文字标注
+    if (labelText && effectivePts.length >= 2) {
+      const midIdx = Math.floor(effectivePts.length / 2);
+      const pA = effectivePts[midIdx - 1];
+      const pB = effectivePts[midIdx];
+      const midX = Math.round((pA.x + pB.x) / 2);
+      const midY = Math.round((pA.y + pB.y) / 2) - 6;
+
+      const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      txt.setAttribute('class', 'editable wire-label');
+      txt.setAttribute('x', midX);
+      txt.setAttribute('y', midY);
+      txt.setAttribute('font-size', '11');
+      txt.setAttribute('font-weight', '600');
+      txt.setAttribute('fill', color);
+      txt.setAttribute('text-anchor', 'middle');
+      txt.setAttribute('font-family', "'PingFang SC', sans-serif");
+      txt.textContent = labelText;
+      groupEl.appendChild(txt);
+    }
+  }
+
+  function createNewUserWire(points, options = {}) {
+    if (!points || points.length < 2) return null;
+    // 过滤长度为0的无效线段
+    if (points.length === 2 && Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y) < 4) {
+      return null;
+    }
+    saveHistorySnapshot();
+
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'user-wire-group');
+    g.setAttribute('data-points', JSON.stringify(points));
+    g.setAttribute('data-route', options.route || routeType);
+    g.setAttribute('data-color', options.color || currentWireColor);
+    g.setAttribute('data-width', options.width || document.getElementById('wire-width-select').value);
+    g.setAttribute('data-dash', options.dash || document.getElementById('wire-dash-select').value);
+    g.setAttribute('data-marker', options.marker || document.getElementById('wire-marker-select').value);
+    if (options.label) {
+      g.setAttribute('data-label', options.label);
+    }
+
+    renderUserWireGroup(g);
+    userLinesLayer.appendChild(g);
+    selectElement(g, false);
+    return g;
+  }
+
+  // ==================== 模式与工具栏切换 ====================
+  function setInteractionMode(mode) {
+    cancelActiveDrawing();
+    currentMode = mode;
+
+    const editBtn = document.getElementById('toggle-edit-btn');
+    const drawBtn = document.getElementById('toggle-draw-btn');
+    const viewBtn = document.getElementById('toggle-view-btn');
+    const badge = document.getElementById('mode-badge');
+    const tip = document.getElementById('status-tip');
+
+    editBtn.classList.remove('active');
+    drawBtn.classList.remove('draw-active');
+    viewBtn.classList.remove('active');
+    wrapper.classList.remove('editing', 'drawing-mode');
+    container.classList.remove('drawing-cursor');
+    tip.classList.remove('draw-banner');
+
+    if (mode === 'edit') {
+      editBtn.classList.add('active');
+      wrapper.classList.add('editing');
+      badge.textContent = '编辑模式';
+      badge.style.background = '#0ea5e9';
+      badge.style.color = '#fff';
+      tip.textContent = '当前为【编辑模式】：双击文字改字，拖拽文字移动，点击任意线条可改色/调整端点/删除，点【划线/连线】开始画线！';
+    } else if (mode === 'draw') {
+      drawBtn.classList.add('draw-active');
+      wrapper.classList.add('editing', 'drawing-mode');
+      container.classList.add('drawing-cursor');
+      badge.textContent = '划线模式';
+      badge.style.background = '#f59e0b';
+      badge.style.color = '#0f172a';
+      tip.classList.add('draw-banner');
+      updateDrawTipText();
+    } else {
+      viewBtn.classList.add('active');
+      clearSelection();
+      closeTextModal();
+      badge.textContent = '浏览模式';
+      badge.style.background = '#334155';
+      badge.style.color = '#94a3b8';
+      tip.textContent = '当前为【浏览模式】：按住鼠标左键拖动平移，滚轮缩放查看细节。';
+    }
+  }
+
+  function updateDrawTipText() {
+    if (currentMode !== 'draw') return;
+    const tip = document.getElementById('status-tip');
+    if (routeType === 'polyline') {
+      tip.textContent = '【多段折线模式】：依次点击画布添加拐点，双击鼠标左键或按 Enter 完成连线，按 Esc 取消。';
+    } else if (routeType === 'orthogonal') {
+      tip.textContent = '【直角折线模式】：在起点按住拖拽到终点（或点击起点再点击终点）即可自动生成90°折线！靠近端子自动吸附。';
+    } else {
+      tip.textContent = '【直线连线模式】：在起点按住拖拽到终点（或点击起点再点击终点）即可绘制直线！按住 Shift 锁定水平/垂直。';
+    }
+  }
+
+  function setRouteType(type) {
+    cancelActiveDrawing();
+    routeType = type;
+    document.querySelectorAll('.route-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`route-${type}`).classList.add('active');
+
+    // 如果当前未在划线模式，点击走线按钮自动进入划线模式
+    if (currentMode !== 'draw') {
+      setInteractionMode('draw');
+    } else {
+      updateDrawTipText();
+    }
+
+    // 如果当前用户主动选中了一条新增线且点数为2，可切换其走线方式
+    if (selectedElement && isExplicitlySelected && selectedElement.classList.contains('user-wire-group')) {
+      const pts = JSON.parse(selectedElement.getAttribute('data-points') || '[]');
+      if (pts.length === 2 && (type === 'orthogonal' || type === 'straight')) {
+        saveHistorySnapshot();
+        selectedElement.setAttribute('data-route', type);
+        renderUserWireGroup(selectedElement);
+        renderSelectionHandles();
+      }
+    }
+  }
+
+  function selectWireColor(color, swatchEl) {
+    currentWireColor = color;
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+    if (swatchEl) {
+      swatchEl.classList.add('selected');
+    } else {
+      const match = document.querySelector(`.color-swatch[data-color="${color.toLowerCase()}"]`);
+      if (match) match.classList.add('selected');
+    }
+    document.getElementById('custom-color-picker').value = color;
+    previewWire.setAttribute('stroke', color);
+    previewStartDot.setAttribute('fill', color);
+    previewEndDot.setAttribute('fill', color);
+
+    // 仅当用户主动选中线条（或处于编辑模式）时才修改已选线条的颜色；在划线模式下切换颜色用于下一条新线
+    if (selectedElement && (currentMode === 'edit' || isExplicitlySelected)) {
+      updateSelectedWireStyle(true);
+    } else if (currentMode === 'draw' && selectedElement && !isExplicitlySelected) {
+      clearSelection();
+    }
+  }
+
+  // ==================== 选中、端点手柄与样式更新 ====================
+  function selectElement(el, explicit = true) {
+    clearSelection();
+    if (!el) return;
+    selectedElement = el;
+    isExplicitlySelected = explicit;
+    selectedElement.classList.add('selected-wire');
+
+    const delBtn = document.getElementById('delete-selected-btn');
+    const labelBtn = document.getElementById('add-wire-label-btn');
+    delBtn.disabled = false;
+
+    if (el.classList.contains('user-wire-group')) {
+      labelBtn.disabled = false;
+      if (explicit) {
+        // 同步工具栏显示该线条的属性
+        const color = el.getAttribute('data-color') || '#dc2626';
+        const width = el.getAttribute('data-width') || '2';
+        const dash = el.getAttribute('data-dash') || 'none';
+        const marker = el.getAttribute('data-marker') || 'dots';
+        document.getElementById('wire-width-select').value = width;
+        document.getElementById('wire-dash-select').value = dash;
+        document.getElementById('wire-marker-select').value = marker;
+        document.getElementById('custom-color-picker').value = color;
+        document.querySelectorAll('.color-swatch').forEach(s => {
+          s.classList.toggle('selected', s.getAttribute('data-color') === color);
+        });
+      }
+      renderSelectionHandles();
+    } else {
+      labelBtn.disabled = true;
+    }
+  }
+
+  function clearSelection() {
+    if (selectedElement) {
+      selectedElement.classList.remove('selected-wire');
+      selectedElement = null;
+    }
+    isExplicitlySelected = false;
+    selectionHandles.innerHTML = '';
+    document.getElementById('delete-selected-btn').disabled = true;
+    document.getElementById('add-wire-label-btn').disabled = true;
+  }
+
+  function renderSelectionHandles() {
+    selectionHandles.innerHTML = '';
+    if (!selectedElement || !selectedElement.classList.contains('user-wire-group')) return;
+
+    const rawPoints = JSON.parse(selectedElement.getAttribute('data-points') || '[]');
+    rawPoints.forEach((pt, idx) => {
+      const handle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      handle.setAttribute('cx', pt.x);
+      handle.setAttribute('cy', pt.y);
+      handle.setAttribute('r', '6');
+      handle.setAttribute('fill', '#ffffff');
+      handle.setAttribute('stroke', '#f59e0b');
+      handle.setAttribute('stroke-width', '2.5');
+      handle.style.cursor = 'pointer';
+      handle.style.pointerEvents = 'all';
+      handle.setAttribute('data-handle-idx', idx);
+      selectionHandles.appendChild(handle);
+    });
+  }
+
+  function updateSelectedWireStyle(colorChanged = false) {
+    if (!selectedElement) return;
+    if (currentMode === 'draw' && !isExplicitlySelected) {
+      clearSelection();
+      return;
+    }
+
+    if (selectedElement.classList.contains('user-wire-group')) {
+      saveHistorySnapshot();
+      if (colorChanged) {
+        selectedElement.setAttribute('data-color', currentWireColor);
+      }
+      selectedElement.setAttribute('data-width', document.getElementById('wire-width-select').value);
+      selectedElement.setAttribute('data-dash', document.getElementById('wire-dash-select').value);
+      selectedElement.setAttribute('data-marker', document.getElementById('wire-marker-select').value);
+      renderUserWireGroup(selectedElement);
+      renderSelectionHandles();
+    } else if (selectedElement.classList.contains('wire-line')) {
+      saveHistorySnapshot();
+      if (colorChanged) {
+        selectedElement.setAttribute('stroke', currentWireColor);
+      }
+      selectedElement.setAttribute('stroke-width', document.getElementById('wire-width-select').value);
+      const dash = document.getElementById('wire-dash-select').value;
+      if (dash === 'none') {
+        selectedElement.removeAttribute('stroke-dasharray');
+      } else {
+        selectedElement.setAttribute('stroke-dasharray', dash);
+      }
+    }
+  }
+
+  function addLabelToSelectedWire() {
+    if (!selectedElement || !selectedElement.classList.contains('user-wire-group')) return;
+    const prev = selectedElement.getAttribute('data-label') || '互锁信号线';
+    const val = prompt('请输入该线条的标注文字（留空则移除标注）：', prev);
+    if (val === null) return;
+    saveHistorySnapshot();
+    selectedElement.setAttribute('data-label', val.trim());
+    renderUserWireGroup(selectedElement);
+  }
+
+  function deleteSelectedElement() {
+    if (!selectedElement) return;
+    saveHistorySnapshot();
+    selectedElement.remove();
+    clearSelection();
+  }
+
+  function clearUserWires() {
+    if (userLinesLayer.children.length === 0) return;
+    saveHistorySnapshot();
+    userLinesLayer.innerHTML = '';
+    clearSelection();
+  }
+
+  // ==================== 划线核心交互逻辑 ====================
+  function updatePreviewRender(currentMousePt) {
+    if (!isDrawing || drawPoints.length === 0) return;
+    const tempPts = [...drawPoints, currentMousePt];
+    const effectivePts = buildEffectivePoints(tempPts, routeType);
+    const d = pointsToPathD(effectivePts);
+
+    previewWire.setAttribute('d', d);
+    previewWire.setAttribute('stroke', currentWireColor);
+    previewWire.setAttribute('stroke-width', document.getElementById('wire-width-select').value);
+    previewWire.setAttribute('display', 'block');
+
+    previewStartDot.setAttribute('cx', drawPoints[0].x);
+    previewStartDot.setAttribute('cy', drawPoints[0].y);
+    previewStartDot.setAttribute('fill', currentWireColor);
+    previewStartDot.setAttribute('display', 'block');
+
+    previewEndDot.setAttribute('cx', currentMousePt.x);
+    previewEndDot.setAttribute('cy', currentMousePt.y);
+    previewEndDot.setAttribute('fill', currentWireColor);
+    previewEndDot.setAttribute('display', 'block');
+  }
+
+  function cancelActiveDrawing() {
+    isDrawing = false;
+    isLeftMouseDown = false;
+    drawPoints = [];
+    mouseDownSvgPt = null;
+    hasDraggedDuringDraw = false;
+    previewWire.setAttribute('display', 'none');
+    previewStartDot.setAttribute('display', 'none');
+    previewEndDot.setAttribute('display', 'none');
+    snapIndicator.setAttribute('display', 'none');
+  }
+
+  function finishActiveDrawing(finalPoint = null) {
+    if (!isDrawing) return;
+    if (finalPoint) {
+      const last = drawPoints[drawPoints.length - 1];
+      if (!last || Math.hypot(finalPoint.x - last.x, finalPoint.y - last.y) >= 4) {
+        drawPoints.push({ x: finalPoint.x, y: finalPoint.y });
+      }
+    }
+    if (drawPoints.length >= 2) {
+      createNewUserWire(drawPoints);
+    }
+    cancelActiveDrawing();
+  }
+
+  // ==================== 鼠标与画布事件绑定 ====================
   function updateTransform() {
     wrapper.style.transform = `translate(calc(-50% + ${posX}px), calc(-50% + ${posY}px)) scale(${scale})`;
   }
 
-  // 鼠标滚轮缩放
+  // 滚轮缩放
   container.addEventListener('wheel', (e) => {
     e.preventDefault();
     const zoomFactor = 1.1;
@@ -398,76 +1235,264 @@
       scale = Math.max(scale / zoomFactor, 0.3);
     }
     updateTransform();
-  });
+  }, { passive: false });
 
-  // 画布拖拽平移
   container.addEventListener('mousedown', (e) => {
-    if (e.target.tagName.toLowerCase() === 'text' && isEditMode) {
-      return; // 点击文本交给双击事件
+    if (e.button !== 0) return;
+
+    // 1. 检查是否点击了选中线条的端点拖拽手柄
+    const handleIdx = e.target.getAttribute && e.target.getAttribute('data-handle-idx');
+    if (handleIdx !== null && handleIdx !== undefined && selectedElement) {
+      e.stopPropagation();
+      saveHistorySnapshot();
+      draggingHandleInfo = {
+        wireGroup: selectedElement,
+        pointIndex: parseInt(handleIdx, 10)
+      };
+      return;
     }
-    if (e.button === 0) {
-      isDragging = true;
-      startX = e.clientX - posX;
-      startY = e.clientY - posY;
+
+    // 2. 如果按住空格键或处于浏览模式 -> 平移画布
+    if (isSpacePressed || currentMode === 'view') {
+      isPanning = true;
+      panStartX = e.clientX - posX;
+      panStartY = e.clientY - posY;
+      container.style.cursor = 'grabbing';
+      return;
+    }
+
+    // 3. 划线模式下的鼠标按下
+    if (currentMode === 'draw') {
+      isLeftMouseDown = true;
+      const refPt = drawPoints.length > 0 ? drawPoints[drawPoints.length - 1] : null;
+      const snappedPt = getSnappedPoint(e.clientX, e.clientY, e.shiftKey, refPt);
+
+      if (!isDrawing) {
+        // 开始新线段
+        isDrawing = true;
+        drawPoints = [{ x: snappedPt.x, y: snappedPt.y }];
+        mouseDownSvgPt = { x: snappedPt.x, y: snappedPt.y };
+        hasDraggedDuringDraw = false;
+        updatePreviewRender(snappedPt);
+      } else {
+        // 已经在点击-移动绘制中
+        if (routeType === 'polyline') {
+          const last = drawPoints[drawPoints.length - 1];
+          // 如果双击靠近上一个点则直接结束折线
+          if (Math.hypot(snappedPt.x - last.x, snappedPt.y - last.y) < 5 && drawPoints.length >= 2) {
+            finishActiveDrawing();
+          } else {
+            drawPoints.push({ x: snappedPt.x, y: snappedPt.y });
+            updatePreviewRender(snappedPt);
+          }
+        } else {
+          // 直线或直角折线：第二次点击完成绘制
+          finishActiveDrawing(snappedPt);
+        }
+      }
+      return;
+    }
+
+    // 4. 编辑模式下的选中、文字拖拽或画布平移
+    if (currentMode === 'edit') {
+      const userGroup = e.target.closest ? e.target.closest('.user-wire-group') : null;
+      if (userGroup) {
+        selectElement(userGroup, true);
+        return;
+      }
+      if (e.target.classList && e.target.classList.contains('wire-line')) {
+        selectElement(e.target, true);
+        return;
+      }
+      if (e.target.tagName && e.target.tagName.toLowerCase() === 'text') {
+        selectElement(e.target, true);
+        const svgPt = clientToSvgPoint(e.clientX, e.clientY);
+        const tx = parseFloat(e.target.getAttribute('x') || '0');
+        const ty = parseFloat(e.target.getAttribute('y') || '0');
+        draggingTextEl = e.target;
+        draggingTextEl._hasMoved = false;
+        textDragOffset = { x: svgPt.x - tx, y: svgPt.y - ty };
+        return;
+      }
+
+      // 点击空白背景区域 -> 取消选中并启动平移
+      clearSelection();
+      isPanning = true;
+      panStartX = e.clientX - posX;
+      panStartY = e.clientY - posY;
       container.style.cursor = 'grabbing';
     }
   });
 
   window.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    posX = e.clientX - startX;
-    posY = e.clientY - startY;
-    updateTransform();
-  });
-
-  window.addEventListener('mouseup', () => {
-    isDragging = false;
-    container.style.cursor = 'grab';
-  });
-
-  function zoomIn() { scale = Math.min(scale * 1.25, 6); updateTransform(); }
-  function zoomOut() { scale = Math.max(scale / 1.25, 0.3); updateTransform(); }
-  function resetZoom() { scale = 1; posX = 0; posY = 0; updateTransform(); }
-
-  // 切换编辑/查看模式
-  function toggleEditMode() {
-    isEditMode = !isEditMode;
-    const btn = document.getElementById('toggle-edit-btn');
-    const badge = document.getElementById('mode-badge');
-    const tip = document.getElementById('status-tip');
-    if (isEditMode) {
-      btn.classList.add('active');
-      wrapper.classList.add('editing');
-      badge.textContent = '编辑模式';
-      badge.style.color = '#38bdf8';
-      tip.textContent = '💡 当前为【编辑模式】：直接【双击图上任何文字】即可打字修改！修改完可一键导出！';
-    } else {
-      btn.classList.remove('active');
-      wrapper.classList.remove('editing');
-      badge.textContent = '查看模式';
-      badge.style.color = '#94a3b8';
-      tip.textContent = '💡 当前为【浏览模式】：按住鼠标左键可拖动平移，滚轮缩放查看细节。';
-      closeTextModal();
+    // 1. 拖拽线条端点手柄
+    if (draggingHandleInfo) {
+      const { wireGroup, pointIndex } = draggingHandleInfo;
+      const pts = JSON.parse(wireGroup.getAttribute('data-points') || '[]');
+      const otherPt = pts.length === 2 ? pts[1 - pointIndex] : null;
+      const snapped = getSnappedPoint(e.clientX, e.clientY, e.shiftKey, otherPt);
+      pts[pointIndex] = { x: snapped.x, y: snapped.y };
+      wireGroup.setAttribute('data-points', JSON.stringify(pts));
+      renderUserWireGroup(wireGroup);
+      renderSelectionHandles();
+      return;
     }
-  }
 
-  // 双击文字直接编辑
-  document.getElementById('main-svg').addEventListener('dblclick', (e) => {
-    if (!isEditMode) return;
+    // 2. 拖拽移动文字
+    if (draggingTextEl) {
+      const svgPt = clientToSvgPoint(e.clientX, e.clientY);
+      const nx = Math.round(svgPt.x - textDragOffset.x);
+      const ny = Math.round(svgPt.y - textDragOffset.y);
+      if (!draggingTextEl._hasMoved) {
+        saveHistorySnapshot();
+        draggingTextEl._hasMoved = true;
+      }
+      draggingTextEl.setAttribute('x', nx);
+      draggingTextEl.setAttribute('y', ny);
+      return;
+    }
+
+    // 3. 划线模式实时预览与吸附
+    if (currentMode === 'draw') {
+      const refPt = drawPoints.length > 0 ? drawPoints[drawPoints.length - 1] : null;
+      const snapped = getSnappedPoint(e.clientX, e.clientY, e.shiftKey, refPt);
+      if (isDrawing) {
+        if (isLeftMouseDown && mouseDownSvgPt && Math.hypot(snapped.x - mouseDownSvgPt.x, snapped.y - mouseDownSvgPt.y) > 8) {
+          hasDraggedDuringDraw = true;
+        }
+        updatePreviewRender(snapped);
+      }
+      return;
+    }
+
+    // 4. 画布拖拽平移
+    if (isPanning) {
+      posX = e.clientX - panStartX;
+      posY = e.clientY - panStartY;
+      updateTransform();
+    }
+  });
+
+  window.addEventListener('mouseup', (e) => {
+    if (draggingHandleInfo) {
+      draggingHandleInfo = null;
+      snapIndicator.setAttribute('display', 'none');
+      return;
+    }
+
+    if (draggingTextEl) {
+      draggingTextEl = null;
+      return;
+    }
+
+    // 划线模式下如果是按住鼠标拖拽画线，松开鼠标左键即完成线段
+    const wasDragDrawing = isLeftMouseDown && hasDraggedDuringDraw;
+    isLeftMouseDown = false;
+    if (currentMode === 'draw' && isDrawing && routeType !== 'polyline' && wasDragDrawing) {
+      const refPt = drawPoints[0];
+      const snapped = getSnappedPoint(e.clientX, e.clientY, e.shiftKey, refPt);
+      finishActiveDrawing(snapped);
+      return;
+    }
+
+    if (isPanning) {
+      isPanning = false;
+      container.style.cursor = currentMode === 'draw' ? 'crosshair' : 'grab';
+    }
+  });
+
+  // 右键取消正在绘制的线条
+  container.addEventListener('contextmenu', (e) => {
+    if (isDrawing) {
+      e.preventDefault();
+      if (routeType === 'polyline' && drawPoints.length >= 2) {
+        finishActiveDrawing();
+      } else {
+        cancelActiveDrawing();
+      }
+    }
+  });
+
+  // 双击事件：在折线模式完成折线，在编辑模式修改文字或线上标签
+  svg.addEventListener('dblclick', (e) => {
+    if (currentMode === 'draw' && routeType === 'polyline' && isDrawing) {
+      e.stopPropagation();
+      finishActiveDrawing();
+      return;
+    }
+
+    if (currentMode === 'view') return;
+
     if (e.target.tagName.toLowerCase() === 'text') {
       currentEditingTextElement = e.target;
       input.value = currentEditingTextElement.textContent.trim();
       modal.style.display = 'block';
-      modal.style.left = `${Math.min(e.clientX, window.innerWidth - 300)}px`;
+      modal.style.left = `${Math.min(e.clientX, window.innerWidth - 360)}px`;
       modal.style.top = `${Math.min(e.clientY - 20, window.innerHeight - 80)}px`;
       input.focus();
       input.select();
+      return;
+    }
+
+    const userGroup = e.target.closest ? e.target.closest('.user-wire-group') : null;
+    if (userGroup) {
+      selectElement(userGroup, true);
+      addLabelToSelectedWire();
     }
   });
 
+  // 键盘快捷键
+  window.addEventListener('keydown', (e) => {
+    if (modal.style.display === 'block' || document.activeElement.tagName === 'INPUT') return;
+
+    if (e.code === 'Space') {
+      isSpacePressed = true;
+      container.style.cursor = 'grab';
+    } else if (e.key === 'Escape') {
+      if (isDrawing) {
+        cancelActiveDrawing();
+      } else {
+        clearSelection();
+      }
+    } else if (e.key === 'Enter' && isDrawing && routeType === 'polyline') {
+      finishActiveDrawing();
+    } else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedElement) {
+      e.preventDefault();
+      deleteSelectedElement();
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      if (e.shiftKey) redoAction();
+      else undoAction();
+    } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+      e.preventDefault();
+      redoAction();
+    } else if (!e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'l') {
+      setInteractionMode(currentMode === 'draw' ? 'edit' : 'draw');
+    } else if (!e.ctrlKey && !e.metaKey && e.key.toLowerCase() === 'v') {
+      setInteractionMode('edit');
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    if (e.code === 'Space') {
+      isSpacePressed = false;
+      container.style.cursor = currentMode === 'draw' ? 'crosshair' : 'grab';
+    }
+  });
+
+  // ==================== 缩放与文本编辑 ====================
+  function zoomIn() { scale = Math.min(scale * 1.25, 6); updateTransform(); }
+  function zoomOut() { scale = Math.max(scale / 1.25, 0.3); updateTransform(); }
+  function resetZoom() { scale = 1; posX = 0; posY = 0; updateTransform(); }
+
   function confirmTextEdit() {
     if (currentEditingTextElement) {
+      saveHistorySnapshot();
       currentEditingTextElement.textContent = input.value;
+      const parentWire = currentEditingTextElement.closest('.user-wire-group');
+      if (parentWire) {
+        parentWire.setAttribute('data-label', input.value);
+      }
     }
     closeTextModal();
   }
@@ -482,29 +1507,44 @@
     if (e.key === 'Escape') closeTextModal();
   });
 
-  // 添加自定义文字
   function addCustomText() {
-    const textVal = prompt('请输入要添加的文字/备注说明：', '新增备注说明');
+    const textVal = prompt('请输入要添加的文字/备注说明：', '新增互锁备注说明');
     if (!textVal) return;
-    const svg = document.getElementById('main-svg');
+    saveHistorySnapshot();
     const newText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     newText.setAttribute('class', 'editable');
     newText.setAttribute('x', '640');
     newText.setAttribute('y', '380');
     newText.setAttribute('font-size', '14');
-    newText.setAttribute('fill', '#dc2626');
+    newText.setAttribute('fill', currentWireColor);
     newText.setAttribute('font-weight', 'bold');
     newText.setAttribute('text-anchor', 'middle');
     newText.setAttribute('font-family', "'PingFang SC', sans-serif");
     newText.textContent = textVal;
-    svg.appendChild(newText);
-    alert('✅ 新文本已添加到画面正中央，可双击它修改内容！');
+    userTextsLayer.appendChild(newText);
+    if (currentMode !== 'edit') setInteractionMode('edit');
+    selectElement(newText, true);
   }
 
-  // 导出修改后的 SVG 矢量图
+  // ==================== 导出 SVG 与高清 PNG ====================
+  function getCleanSerializedSVG() {
+    // 导出前隐藏临时辅助层与选中高亮
+    const prevOverlayDisplay = interactionOverlay.getAttribute('display');
+    interactionOverlay.setAttribute('display', 'none');
+    const prevSelected = selectedElement;
+    if (prevSelected) prevSelected.classList.remove('selected-wire');
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+
+    if (prevOverlayDisplay) interactionOverlay.setAttribute('display', prevOverlayDisplay);
+    else interactionOverlay.removeAttribute('display');
+    if (prevSelected) prevSelected.classList.add('selected-wire');
+
+    return svgData;
+  }
+
   function exportSVG() {
-    const svgEl = document.getElementById('main-svg');
-    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const svgData = getCleanSerializedSVG();
     const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -514,10 +1554,8 @@
     URL.revokeObjectURL(url);
   }
 
-  // 导出修改后的 PNG 高清大图
   function exportPNG() {
-    const svgEl = document.getElementById('main-svg');
-    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const svgData = getCleanSerializedSVG();
     const canvas = document.createElement('canvas');
     canvas.width = 2560; // 2x 超高清
     canvas.height = 1560;
@@ -543,8 +1581,9 @@
   // 自适应初始窗口大小
   window.addEventListener('DOMContentLoaded', () => {
     const containerW = container.clientWidth;
-    if (containerW < 1300) {
-      scale = Math.max(containerW / 1350, 0.4);
+    const containerH = container.clientHeight;
+    if (containerW < 1320 || containerH < 820) {
+      scale = Math.max(Math.min(containerW / 1340, containerH / 830), 0.4);
       updateTransform();
     }
   });
