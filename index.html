@@ -3,55 +3,76 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AB 门 (双门联动互锁) 接线示意图 - 交互式矢量预览</title>
+<title>AB 门 (双门联动互锁) 接线示意图 - 在线编辑与预览工坊</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     background: #0f172a;
     color: #f8fafc;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
     display: flex;
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
+    user-select: none;
   }
   header {
     background: #1e293b;
-    padding: 12px 20px;
+    padding: 10px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #334155;
-    z-index: 10;
+    z-index: 20;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
   }
-  .title-group h1 { font-size: 16px; font-weight: 600; color: #38bdf8; }
-  .title-group p { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+  .title-group h1 { font-size: 15px; font-weight: 600; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+  .title-group p { font-size: 11px; color: #94a3b8; margin-top: 2px; }
   .toolbar {
     display: flex;
     gap: 8px;
     align-items: center;
+    flex-wrap: wrap;
   }
-  button {
+  button, .btn {
     background: #334155;
     color: #f1f5f9;
     border: 1px solid #475569;
-    padding: 6px 14px;
+    padding: 6px 12px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
+    font-weight: 500;
     transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
-  button:hover { background: #0284c7; border-color: #38bdf8; }
-  .download-btn { background: #2563eb; border-color: #3b82f6; }
-  .download-btn:hover { background: #1d4ed8; }
-  #viewer-container {
+  button:hover, .btn:hover { background: #0284c7; border-color: #38bdf8; color: #fff; }
+  button.active {
+    background: #0ea5e9;
+    border-color: #38bdf8;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(14, 165, 233, 0.4);
+  }
+  .btn-green { background: #15803d; border-color: #22c55e; }
+  .btn-green:hover { background: #16a34a; }
+  .btn-blue { background: #2563eb; border-color: #3b82f6; }
+  .btn-blue:hover { background: #1d4ed8; }
+
+  #workspace {
     flex: 1;
     position: relative;
     overflow: hidden;
-    cursor: grab;
     background: #090d16;
   }
-  #viewer-container:active { cursor: grabbing; }
+  #viewer-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
   #svg-wrapper {
     position: absolute;
     top: 50%;
@@ -60,261 +81,294 @@
     transition: transform 0.05s ease-out;
   }
   svg {
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    box-shadow: 0 15px 50px rgba(0,0,0,0.7);
     border-radius: 8px;
     background: #ffffff;
   }
-  .tip {
+
+  /* 可编辑状态高亮 */
+  .editing text {
+    cursor: text !important;
+  }
+  .editing text:hover {
+    outline: 2px dashed #0284c7;
+    fill: #0284c7 !important;
+  }
+  
+  .banner-tip {
     position: absolute;
-    bottom: 16px;
+    top: 12px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid #334155;
-    padding: 6px 16px;
+    background: rgba(15, 23, 42, 0.88);
+    border: 1px solid #0284c7;
+    padding: 6px 18px;
     border-radius: 20px;
     font-size: 12px;
-    color: #94a3b8;
+    color: #38bdf8;
     pointer-events: none;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(6px);
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  /* 浮动在线编辑弹窗 */
+  #text-editor-modal {
+    display: none;
+    position: absolute;
+    z-index: 100;
+    background: #1e293b;
+    border: 1px solid #38bdf8;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  #text-editor-modal input {
+    background: #0f172a;
+    border: 1px solid #475569;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    outline: none;
+    width: 220px;
+  }
+  #text-editor-modal button {
+    padding: 6px 10px;
+    margin-left: 6px;
   }
 </style>
 </head>
 <body>
 <header>
   <div class="title-group">
-    <h1>📐 AB 门 (双门联动互锁) 接线示意图 · 在线无损预览</h1>
-    <p>支持鼠标滚轮无限缩放、按住鼠标拖拽平移 · 矢量无损高清</p>
+    <h1>📐 AB 门接线示意图 · 在线交互工坊 <span id="mode-badge" style="font-size:11px; background:#334155; padding:2px 8px; border-radius:12px; color:#94a3b8;">查看模式</span></h1>
+    <p>双击任意文字直接修改 ｜ 鼠标拖拽平移与滚轮缩放 ｜ 实时导出高清图/SVG</p>
   </div>
   <div class="toolbar">
+    <button id="toggle-edit-btn" onclick="toggleEditMode()" class="active">✏️ 编辑模式 (双击改字)</button>
+    <button onclick="addCustomText()">➕ 添加文本</button>
+    <div style="width:1px; height:18px; background:#475569; margin:0 4px;"></div>
     <button onclick="zoomIn()">➕ 放大</button>
     <button onclick="zoomOut()">➖ 缩小</button>
     <button onclick="resetZoom()">↺ 复位</button>
-    <a href="https://apan.arikacips.cyou/dav/google%20ar1kka/little%20meow/AB_Door_Interlock_Wiring_Diagram.dxf" download>
-      <button class="download-btn">⬇ 下载 CAD (DXF)</button>
+    <div style="width:1px; height:18px; background:#475569; margin:0 4px;"></div>
+    <button onclick="exportPNG()" class="btn-green">🖼️ 导出修改后的图片</button>
+    <button onclick="exportSVG()" class="btn-blue">🎨 导出矢量 SVG</button>
+    <a href="https://apan.arikacips.cyou/dav/google%20ar1kka/little%20meow/AB_Door_Interlock_Wiring_Diagram.dxf" download class="btn">
+      💾 原版 CAD (.dxf)
     </a>
   </div>
 </header>
 
-<div id="viewer-container">
-  <div id="svg-wrapper">
-    <!-- SVG Content -->
-    <svg width="1280" height="780" viewBox="0 0 1280 780" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
-          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.08"/>
-        </filter>
-      </defs>
-      
-      <!-- 背景 -->
-      <rect width="1280" height="780" fill="#ffffff"/>
-      
-      <!-- 标题 -->
-      <text x="640" y="45" font-size="22" font-weight="bold" fill="#0f172a" text-anchor="middle" font-family="'PingFang SC', 'Microsoft YaHei', sans-serif">AB 门 (双门联动互锁) 接线示意图</text>
-      <text x="640" y="72" font-size="12" fill="#64748b" text-anchor="middle">联动门控制主机 BJRANDE-760 ｜ 内门 / 外门双通道 ｜ 门禁设备×2 · 开门按钮×2 · 电锁×2 · 12V2A 电源×2 · 摄像头×1</text>
-      
-      <!-- 设备框通用样式 -->
-      <g stroke="#334155" stroke-width="1.2" fill="#f8fafc" rx="6" filter="url(#shadow)">
-        <!-- 1. 内门电锁 -->
-        <rect x="40" y="95" width="240" height="150" rx="6"/>
-        <!-- 2. 外门电锁 -->
-        <rect x="1000" y="95" width="240" height="150" rx="6"/>
-        <!-- 3. 主机 -->
-        <rect x="420" y="95" width="440" height="175" rx="6"/>
-        <!-- 4. 开门按钮 内门 -->
-        <rect x="40" y="275" width="240" height="95" rx="6"/>
-        <!-- 4. 开门按钮 外门 -->
-        <rect x="1000" y="275" width="240" height="95" rx="6"/>
-        <!-- 5. 电源适配器 内门 -->
-        <rect x="40" y="400" width="240" height="75" rx="6"/>
-        <!-- 5. 电源适配器 外门 -->
-        <rect x="1000" y="400" width="240" height="75" rx="6"/>
-        <!-- 6. 门禁设备 内门 -->
-        <rect x="40" y="505" width="240" height="145" rx="6"/>
-        <!-- 6. 门禁设备 外门 -->
-        <rect x="1000" y="505" width="240" height="145" rx="6"/>
-        <!-- 7. 摄像头 -->
-        <rect x="540" y="660" width="200" height="50" rx="6"/>
-      </g>
-      
-      <!-- 设备标题文本 -->
-      <g font-family="'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#0f172a">
-        <text x="160" y="122" text-anchor="middle">电锁 (磁力锁) — 内门</text>
-        <text x="1120" y="122" text-anchor="middle">电锁 (磁力锁) — 外门</text>
-        <text x="640" y="120" text-anchor="middle" font-size="15">联动门控制主机</text>
-        <text x="640" y="138" text-anchor="middle" font-size="11" font-weight="normal" fill="#64748b">BJRANDE-760 (双门联动互锁)</text>
-        <text x="160" y="302" text-anchor="middle">开门按钮 — 内门</text>
-        <text x="1120" y="302" text-anchor="middle">开门按钮 — 外门</text>
-        <text x="160" y="426" text-anchor="middle">12V2A 电源适配器 — 内门</text>
-        <text x="1120" y="426" text-anchor="middle">12V2A 电源适配器 — 外门</text>
-        <text x="160" y="530" text-anchor="middle">门禁设备 — 内门</text>
-        <text x="1120" y="530" text-anchor="middle">门禁设备 — 外门</text>
-        <text x="640" y="682" text-anchor="middle">摄像头</text>
-      </g>
-      
-      <!-- 端子文字及节点标号 -->
-      <g font-family="Consolas, monospace" font-size="11" fill="#475569">
-        <!-- 内门电锁端子 -->
-        <text x="250" y="153" text-anchor="end">12V+</text>
-        <text x="250" y="178" text-anchor="end">12V-</text>
-        <text x="250" y="203" text-anchor="end">COM</text>
-        <text x="250" y="228" text-anchor="end">NO</text>
+<div id="workspace">
+  <div class="banner-tip" id="status-tip">💡 当前为【编辑模式】：直接【双击图上任何文字】即可打字修改！修改完可一键导出！</div>
+
+  <div id="viewer-container">
+    <div id="svg-wrapper" class="editing">
+      <!-- 完整矢量接线图 -->
+      <svg id="main-svg" width="1280" height="780" viewBox="0 0 1280 780" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.08"/>
+          </filter>
+        </defs>
         
-        <!-- 外门电锁端子 -->
-        <text x="1030" y="153">12V+</text>
-        <text x="1030" y="178">12V-</text>
-        <text x="1030" y="203">COM</text>
-        <text x="1030" y="228">NO</text>
+        <!-- 背景白底 -->
+        <rect width="1280" height="780" fill="#ffffff"/>
         
-        <!-- 主机内门端子 -->
-        <text x="445" y="153">内门锁 L+</text>
-        <text x="445" y="178">内门锁 GND</text>
-        <text x="445" y="203">内门锁 M+</text>
-        <text x="445" y="228">内门锁 GND</text>
+        <!-- 标题 -->
+        <text class="editable" x="640" y="45" font-size="22" font-weight="bold" fill="#0f172a" text-anchor="middle" font-family="'PingFang SC', 'Microsoft YaHei', sans-serif">AB 门 (双门联动互锁) 接线示意图</text>
+        <text class="editable" x="640" y="72" font-size="12" fill="#64748b" text-anchor="middle">联动门控制主机 BJRANDE-760 ｜ 内门 / 外门双通道 ｜ 门禁设备×2 · 开门按钮×2 · 电锁×2 · 12V2A 电源×2 · 摄像头×1</text>
         
-        <!-- 主机外门端子 -->
-        <text x="835" y="153" text-anchor="end">外门锁 L+</text>
-        <text x="835" y="178" text-anchor="end">外门锁 GND</text>
-        <text x="835" y="203" text-anchor="end">外门锁 M+</text>
-        <text x="835" y="228" text-anchor="end">外门锁 GND</text>
+        <!-- 设备框 -->
+        <g stroke="#334155" stroke-width="1.2" fill="#f8fafc" rx="6" filter="url(#shadow)">
+          <rect x="40" y="95" width="240" height="150" rx="6"/>
+          <rect x="1000" y="95" width="240" height="150" rx="6"/>
+          <rect x="420" y="95" width="440" height="175" rx="6"/>
+          <rect x="40" y="275" width="240" height="95" rx="6"/>
+          <rect x="1000" y="275" width="240" height="95" rx="6"/>
+          <rect x="40" y="400" width="240" height="75" rx="6"/>
+          <rect x="1000" y="400" width="240" height="75" rx="6"/>
+          <rect x="40" y="505" width="240" height="145" rx="6"/>
+          <rect x="1000" y="505" width="240" height="145" rx="6"/>
+          <rect x="540" y="660" width="200" height="50" rx="6"/>
+        </g>
         
-        <!-- 开门按钮端子 -->
-        <text x="250" y="328" text-anchor="end">COM</text>
-        <text x="250" y="353" text-anchor="end">NO</text>
-        <text x="1030" y="328">COM</text>
-        <text x="1030" y="353">NO</text>
+        <!-- 设备标题文本 (可双击编辑) -->
+        <g font-family="'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" font-weight="600" fill="#0f172a">
+          <text class="editable" x="160" y="122" text-anchor="middle">电锁 (磁力锁) — 内门</text>
+          <text class="editable" x="1120" y="122" text-anchor="middle">电锁 (磁力锁) — 外门</text>
+          <text class="editable" x="640" y="120" text-anchor="middle" font-size="15">联动门控制主机</text>
+          <text class="editable" x="640" y="138" text-anchor="middle" font-size="11" font-weight="normal" fill="#64748b">BJRANDE-760 (双门联动互锁)</text>
+          <text class="editable" x="160" y="302" text-anchor="middle">开门按钮 — 内门</text>
+          <text class="editable" x="1120" y="302" text-anchor="middle">开门按钮 — 外门</text>
+          <text class="editable" x="160" y="426" text-anchor="middle">12V2A 电源适配器 — 内门</text>
+          <text class="editable" x="1120" y="426" text-anchor="middle">12V2A 电源适配器 — 外门</text>
+          <text class="editable" x="160" y="530" text-anchor="middle">门禁设备 — 内门</text>
+          <text class="editable" x="1120" y="530" text-anchor="middle">门禁设备 — 外门</text>
+          <text class="editable" x="640" y="682" text-anchor="middle">摄像头</text>
+        </g>
         
-        <!-- 主机按钮公共端 -->
-        <text x="445" y="328">GND (公共)</text>
-        <text x="835" y="328" text-anchor="end">GND (公共)</text>
+        <!-- 端子文字 (可编辑) -->
+        <g font-family="Consolas, monospace" font-size="11" fill="#475569">
+          <!-- 内门电锁端子 -->
+          <text class="editable" x="250" y="153" text-anchor="end">12V+</text>
+          <text class="editable" x="250" y="178" text-anchor="end">12V-</text>
+          <text class="editable" x="250" y="203" text-anchor="end">COM</text>
+          <text class="editable" x="250" y="228" text-anchor="end">NO</text>
+          
+          <!-- 外门电锁端子 -->
+          <text class="editable" x="1030" y="153">12V+</text>
+          <text class="editable" x="1030" y="178">12V-</text>
+          <text class="editable" x="1030" y="203">COM</text>
+          <text class="editable" x="1030" y="228">NO</text>
+          
+          <!-- 主机内门端子 -->
+          <text class="editable" x="445" y="153">内门锁 L+</text>
+          <text class="editable" x="445" y="178">内门锁 GND</text>
+          <text class="editable" x="445" y="203">内门锁 M+</text>
+          <text class="editable" x="445" y="228">内门锁 GND</text>
+          
+          <!-- 主机外门端子 -->
+          <text class="editable" x="835" y="153" text-anchor="end">外门锁 L+</text>
+          <text class="editable" x="835" y="178" text-anchor="end">外门锁 GND</text>
+          <text class="editable" x="835" y="203" text-anchor="end">外门锁 M+</text>
+          <text class="editable" x="835" y="228" text-anchor="end">外门锁 GND</text>
+          
+          <!-- 开门按钮端子 -->
+          <text class="editable" x="250" y="328" text-anchor="end">COM</text>
+          <text class="editable" x="250" y="353" text-anchor="end">NO</text>
+          <text class="editable" x="1030" y="328">COM</text>
+          <text class="editable" x="1030" y="353">NO</text>
+          
+          <!-- 主机按钮公共端 -->
+          <text class="editable" x="445" y="328">GND (公共)</text>
+          <text class="editable" x="835" y="328" text-anchor="end">GND (公共)</text>
+          
+          <!-- 电源适配器端子 -->
+          <text class="editable" x="85" y="455">+12V</text>
+          <text class="editable" x="215" y="455">GND</text>
+          <text class="editable" x="1045" y="455">+12V</text>
+          <text class="editable" x="1175" y="455">GND</text>
+          
+          <!-- 门禁设备端子 -->
+          <text class="editable" x="85" y="560">+12V</text>
+          <text class="editable" x="215" y="560">GND</text>
+          <text class="editable" x="250" y="590" text-anchor="end">NO</text>
+          <text class="editable" x="250" y="618" text-anchor="end">COM</text>
+          <text class="editable" x="95" y="635">485A</text>
+          <text class="editable" x="175" y="635">485B</text>
+          
+          <text class="editable" x="1045" y="560">+12V</text>
+          <text class="editable" x="1175" y="560">GND</text>
+          <text class="editable" x="1030" y="590">NO</text>
+          <text class="editable" x="1030" y="618">COM</text>
+          <text class="editable" x="1055" y="635">485A</text>
+          <text class="editable" x="1135" y="635">485B</text>
+          
+          <!-- 摄像头端子 -->
+          <text class="editable" x="590" y="698">485A</text>
+          <text class="editable" x="670" y="698">485B</text>
+          
+          <!-- 主机底部端子 -->
+          <text class="editable" x="475" y="255" text-anchor="middle">公共端 GND</text>
+          <text class="editable" x="545" y="255" text-anchor="middle">按钮 (内门)</text>
+          <text class="editable" x="735" y="255" text-anchor="middle">按钮 (外门)</text>
+          <text class="editable" x="805" y="255" text-anchor="middle">公共端 GND</text>
+        </g>
         
-        <!-- 电源适配器端子 -->
-        <text x="85" y="455">+12V</text>
-        <text x="215" y="455">GND</text>
-        <text x="1045" y="455">+12V</text>
-        <text x="1175" y="455">GND</text>
+        <!-- 导线 (分色绘制) -->
+        <g stroke-width="1.8">
+          <line x1="260" y1="150" x2="435" y2="150" stroke="#dc2626"/>
+          <line x1="260" y1="175" x2="435" y2="175" stroke="#64748b"/>
+          <line x1="260" y1="200" x2="435" y2="200" stroke="#dc2626"/>
+          <line x1="260" y1="225" x2="435" y2="225" stroke="#64748b"/>
+          
+          <line x1="845" y1="150" x2="1020" y2="150" stroke="#dc2626"/>
+          <line x1="845" y1="175" x2="1020" y2="175" stroke="#64748b"/>
+          <line x1="845" y1="200" x2="1020" y2="200" stroke="#dc2626"/>
+          <line x1="845" y1="225" x2="1020" y2="225" stroke="#64748b"/>
+          
+          <line x1="260" y1="325" x2="435" y2="325" stroke="#64748b"/>
+          <line x1="845" y1="325" x2="1020" y2="325" stroke="#64748b"/>
+        </g>
         
-        <!-- 门禁设备端子 -->
-        <text x="85" y="560">+12V</text>
-        <text x="215" y="560">GND</text>
-        <text x="250" y="590" text-anchor="end">NO</text>
-        <text x="250" y="618" text-anchor="end">COM</text>
-        <text x="95" y="635">485A</text>
-        <text x="175" y="635">485B</text>
+        <!-- 导线文字标注 (可编辑) -->
+        <g font-family="'PingFang SC', sans-serif" font-size="10" fill="#dc2626" text-anchor="middle">
+          <text class="editable" x="345" y="145">内门锁 L+ → 电锁 12V+</text>
+          <text class="editable" x="345" y="195">内门锁 M+ → 电锁 COM</text>
+          <text class="editable" x="935" y="145">外门锁 L+ → 电锁 12V+</text>
+          <text class="editable" x="935" y="195">外门锁 M+ → 电锁 COM</text>
+        </g>
+        <g font-family="'PingFang SC', sans-serif" font-size="10" fill="#64748b" text-anchor="middle">
+          <text class="editable" x="345" y="170">内门锁 GND → 电锁 12V-</text>
+          <text class="editable" x="345" y="220">内门锁 GND → 电锁 NO</text>
+          <text class="editable" x="935" y="170">外门锁 GND → 电锁 12V-</text>
+          <text class="editable" x="935" y="220">外门锁 GND → 电锁 NO</text>
+          <text class="editable" x="345" y="320">按钮 COM → 公共端 GND</text>
+          <text class="editable" x="935" y="320">按钮 COM → 公共端 GND</text>
+        </g>
         
-        <text x="1045" y="560">+12V</text>
-        <text x="1175" y="560">GND</text>
-        <text x="1030" y="590">NO</text>
-        <text x="1030" y="618">COM</text>
-        <text x="1055" y="635">485A</text>
-        <text x="1135" y="635">485B</text>
+        <!-- 开门信号线 (绿色 #16a34a) -->
+        <g stroke="#16a34a" stroke-width="2" fill="none">
+          <path d="M 260 350 L 300 350 L 300 586 L 260 586"/>
+          <path d="M 300 520 L 545 520 L 545 270"/>
+          <path d="M 1020 350 L 980 350 L 980 586 L 1020 586"/>
+          <path d="M 980 520 L 735 520 L 735 270"/>
+        </g>
         
-        <!-- 摄像头端子 -->
-        <text x="590" y="698">485A</text>
-        <text x="670" y="698">485B</text>
+        <!-- 门禁 COM 接公共端 GND (灰色) -->
+        <g stroke="#64748b" stroke-width="1.8" fill="none">
+          <path d="M 260 615 L 360 615 L 360 550 L 475 550 L 475 270"/>
+          <path d="M 1020 615 L 920 615 L 920 550 L 805 550 L 805 270"/>
+        </g>
         
-        <!-- 主机底部端子 -->
-        <text x="475" y="255" text-anchor="middle">公共端 GND</text>
-        <text x="545" y="255" text-anchor="middle">按钮 (内门)</text>
-        <text x="735" y="255" text-anchor="middle">按钮 (外门)</text>
-        <text x="805" y="255" text-anchor="middle">公共端 GND</text>
-      </g>
-      
-      <!-- 连线导线 (分色绘制) -->
-      <!-- 1. 开锁回路 (红色) & GND (灰色) -->
-      <!-- 内门锁回路 -->
-      <g stroke-width="1.8">
-        <line x1="260" y1="150" x2="435" y2="150" stroke="#dc2626"/>
-        <line x1="260" y1="175" x2="435" y2="175" stroke="#64748b"/>
-        <line x1="260" y1="200" x2="435" y2="200" stroke="#dc2626"/>
-        <line x1="260" y1="225" x2="435" y2="225" stroke="#64748b"/>
+        <!-- 标注 -->
+        <g font-family="'PingFang SC', sans-serif" font-size="10" fill="#16a34a">
+          <text class="editable" x="375" y="513">门禁设备 NO → 按钮 (内门)</text>
+          <text class="editable" x="815" y="513">门禁设备 NO → 按钮 (外门)</text>
+        </g>
+        <g font-family="'PingFang SC', sans-serif" font-size="10" fill="#64748b">
+          <text class="editable" x="385" y="543">门禁设备 COM → 公共端 GND</text>
+          <text class="editable" x="825" y="543">门禁设备 COM → 公共端 GND</text>
+        </g>
         
-        <!-- 外门锁回路 -->
-        <line x1="845" y1="150" x2="1020" y2="150" stroke="#dc2626"/>
-        <line x1="845" y1="175" x2="1020" y2="175" stroke="#64748b"/>
-        <line x1="845" y1="200" x2="1020" y2="200" stroke="#dc2626"/>
-        <line x1="845" y1="225" x2="1020" y2="225" stroke="#64748b"/>
+        <!-- RS485 总线 -->
+        <g stroke-width="2.2" fill="none">
+          <path d="M 110 645 L 110 740 L 1070 740 L 1070 645" stroke="#f97316"/>
+          <path d="M 605 705 L 605 740" stroke="#f97316"/>
+          <path d="M 190 645 L 190 755 L 1150 755 L 1150 645" stroke="#9333ea"/>
+          <path d="M 685 705 L 685 755" stroke="#9333ea"/>
+        </g>
+        <text class="editable" x="640" y="733" font-family="'PingFang SC', sans-serif" font-size="11" fill="#ea580c" text-anchor="middle">RS-485 通讯总线 (A 接 A、B 接 B，双绞屏蔽线，屏蔽层单端接地)</text>
         
-        <!-- 按钮公共端连线 -->
-        <line x1="260" y1="325" x2="435" y2="325" stroke="#64748b"/>
-        <line x1="845" y1="325" x2="1020" y2="325" stroke="#64748b"/>
-      </g>
-      
-      <!-- 导线文字标注 (小型) -->
-      <g font-family="'PingFang SC', sans-serif" font-size="10" fill="#dc2626" text-anchor="middle">
-        <text x="345" y="145">内门锁 L+ → 电锁 12V+</text>
-        <text x="345" y="195">内门锁 M+ → 电锁 COM</text>
-        <text x="935" y="145">外门锁 L+ → 电锁 12V+</text>
-        <text x="935" y="195">外门锁 M+ → 电锁 COM</text>
-      </g>
-      <g font-family="'PingFang SC', sans-serif" font-size="10" fill="#64748b" text-anchor="middle">
-        <text x="345" y="170">内门锁 GND → 电锁 12V-</text>
-        <text x="345" y="220">内门锁 GND → 电锁 NO</text>
-        <text x="935" y="170">外门锁 GND → 电锁 12V-</text>
-        <text x="935" y="220">外门锁 GND → 电锁 NO</text>
-        <text x="345" y="320">按钮 COM → 公共端 GND</text>
-        <text x="935" y="320">按钮 COM → 公共端 GND</text>
-      </g>
-      
-      <!-- 开门信号线 (绿色 #16a34a) -->
-      <g stroke="#16a34a" stroke-width="2" fill="none">
-        <!-- 内门按钮 NO 下来汇合门禁 NO，进主机 按钮(内门) -->
-        <path d="M 260 350 L 300 350 L 300 586 L 260 586"/>
-        <path d="M 300 520 L 545 520 L 545 270"/>
-        <!-- 外门按钮 NO 下来汇合门禁 NO，进主机 按钮(外门) -->
-        <path d="M 1020 350 L 980 350 L 980 586 L 1020 586"/>
-        <path d="M 980 520 L 735 520 L 735 270"/>
-      </g>
-      
-      <!-- 门禁 COM 接公共端 GND (灰色) -->
-      <g stroke="#64748b" stroke-width="1.8" fill="none">
-        <path d="M 260 615 L 360 615 L 360 550 L 475 550 L 475 270"/>
-        <path d="M 1020 615 L 920 615 L 920 550 L 805 550 L 805 270"/>
-      </g>
-      
-      <!-- 开门信号与公共端标注 -->
-      <g font-family="'PingFang SC', sans-serif" font-size="10" fill="#16a34a">
-        <text x="375" y="513">门禁设备 NO → 按钮 (内门)</text>
-        <text x="815" y="513">门禁设备 NO → 按钮 (外门)</text>
-      </g>
-      <g font-family="'PingFang SC', sans-serif" font-size="10" fill="#64748b">
-        <text x="385" y="543">门禁设备 COM → 公共端 GND</text>
-        <text x="825" y="543">门禁设备 COM → 公共端 GND</text>
-      </g>
-      
-      <!-- RS485 总线 (橙色 485A / 紫色 485B) -->
-      <g stroke-width="2.2" fill="none">
-        <!-- 485A 橙色 -->
-        <path d="M 110 645 L 110 740 L 1070 740 L 1070 645" stroke="#f97316"/>
-        <path d="M 605 705 L 605 740" stroke="#f97316"/>
-        
-        <!-- 485B 紫色 -->
-        <path d="M 190 645 L 190 755 L 1150 755 L 1150 645" stroke="#9333ea"/>
-        <path d="M 685 705 L 685 755" stroke="#9333ea"/>
-      </g>
-      <text x="640" y="733" font-family="'PingFang SC', sans-serif" font-size="11" fill="#ea580c" text-anchor="middle">RS-485 通讯总线 (A 接 A、B 接 B，双绞屏蔽线，屏蔽层单端接地)</text>
-      
-      <!-- 实心接线节点与端子圆圈 -->
-      <g fill="#0f172a">
-        <circle cx="260" cy="150" r="3"/><circle cx="260" cy="175" r="3"/><circle cx="260" cy="200" r="3"/><circle cx="260" cy="225" r="3"/>
-        <circle cx="435" cy="150" r="3"/><circle cx="435" cy="175" r="3"/><circle cx="435" cy="200" r="3"/><circle cx="435" cy="225" r="3"/>
-        <circle cx="1020" cy="150" r="3"/><circle cx="1020" cy="175" r="3"/><circle cx="1020" cy="200" r="3"/><circle cx="1020" cy="225" r="3"/>
-        <circle cx="845" cy="150" r="3"/><circle cx="845" cy="175" r="3"/><circle cx="845" cy="200" r="3"/><circle cx="845" cy="225" r="3"/>
-        <circle cx="260" cy="325" r="3"/><circle cx="260" cy="350" r="3"/><circle cx="435" cy="325" r="3"/>
-        <circle cx="1020" cy="325" r="3"/><circle cx="1020" cy="350" r="3"/><circle cx="845" cy="325" r="3"/>
-        <circle cx="260" cy="586" r="3"/><circle cx="260" cy="615" r="3"/>
-        <circle cx="1020" cy="586" r="3"/><circle cx="1020" cy="615" r="3"/>
-        <circle cx="475" cy="270" r="3"/><circle cx="545" cy="270" r="3"/><circle cx="735" cy="270" r="3"/><circle cx="805" cy="270" r="3"/>
-        <!-- 汇合点 (实心绿圆点) -->
-        <circle cx="300" cy="520" r="4.5" fill="#16a34a"/>
-        <circle cx="980" cy="520" r="4.5" fill="#16a34a"/>
-        <!-- 485 节点 -->
-        <circle cx="605" cy="740" r="4" fill="#f97316"/>
-        <circle cx="685" cy="755" r="4" fill="#9333ea"/>
-      </g>
-    </svg>
+        <!-- 节点实心圆圈 -->
+        <g fill="#0f172a">
+          <circle cx="260" cy="150" r="3"/><circle cx="260" cy="175" r="3"/><circle cx="260" cy="200" r="3"/><circle cx="260" cy="225" r="3"/>
+          <circle cx="435" cy="150" r="3"/><circle cx="435" cy="175" r="3"/><circle cx="435" cy="200" r="3"/><circle cx="435" cy="225" r="3"/>
+          <circle cx="1020" cy="150" r="3"/><circle cx="1020" cy="175" r="3"/><circle cx="1020" cy="200" r="3"/><circle cx="1020" cy="225" r="3"/>
+          <circle cx="845" cy="150" r="3"/><circle cx="845" cy="175" r="3"/><circle cx="845" cy="200" r="3"/><circle cx="845" cy="225" r="3"/>
+          <circle cx="260" cy="325" r="3"/><circle cx="260" cy="350" r="3"/><circle cx="435" cy="325" r="3"/>
+          <circle cx="1020" cy="325" r="3"/><circle cx="1020" cy="350" r="3"/><circle cx="845" cy="325" r="3"/>
+          <circle cx="260" cy="586" r="3"/><circle cx="260" cy="615" r="3"/>
+          <circle cx="1020" cy="586" r="3"/><circle cx="1020" cy="615" r="3"/>
+          <circle cx="475" cy="270" r="3"/><circle cx="545" cy="270" r="3"/><circle cx="735" cy="270" r="3"/><circle cx="805" cy="270" r="3"/>
+          <circle cx="300" cy="520" r="4.5" fill="#16a34a"/>
+          <circle cx="980" cy="520" r="4.5" fill="#16a34a"/>
+          <circle cx="605" cy="740" r="4" fill="#f97316"/>
+          <circle cx="685" cy="755" r="4" fill="#9333ea"/>
+        </g>
+      </svg>
+    </div>
   </div>
-  <div class="tip">💡 提示：支持鼠标滚轮缩放，按住鼠标左键可任意拖拽平移画布</div>
+</div>
+
+<!-- 双击改字浮动输入框 -->
+<div id="text-editor-modal">
+  <input type="text" id="modal-text-input" placeholder="输入新的文字内容...">
+  <button onclick="confirmTextEdit()" class="btn-blue">确定</button>
+  <button onclick="closeTextModal()">取消</button>
 </div>
 
 <script>
@@ -322,30 +376,40 @@
   let posX = 0, posY = 0;
   let isDragging = false;
   let startX, startY;
+  let isEditMode = true;
+  let currentEditingTextElement = null;
 
   const wrapper = document.getElementById('svg-wrapper');
   const container = document.getElementById('viewer-container');
+  const modal = document.getElementById('text-editor-modal');
+  const input = document.getElementById('modal-text-input');
 
   function updateTransform() {
     wrapper.style.transform = `translate(calc(-50% + ${posX}px), calc(-50% + ${posY}px)) scale(${scale})`;
   }
 
+  // 鼠标滚轮缩放
   container.addEventListener('wheel', (e) => {
     e.preventDefault();
     const zoomFactor = 1.1;
     if (e.deltaY < 0) {
-      scale = Math.min(scale * zoomFactor, 5);
+      scale = Math.min(scale * zoomFactor, 6);
     } else {
-      scale = Math.max(scale / zoomFactor, 0.4);
+      scale = Math.max(scale / zoomFactor, 0.3);
     }
     updateTransform();
   });
 
+  // 画布拖拽平移
   container.addEventListener('mousedown', (e) => {
+    if (e.target.tagName.toLowerCase() === 'text' && isEditMode) {
+      return; // 点击文本交给双击事件
+    }
     if (e.button === 0) {
       isDragging = true;
       startX = e.clientX - posX;
       startY = e.clientY - posY;
+      container.style.cursor = 'grabbing';
     }
   });
 
@@ -358,24 +422,125 @@
 
   window.addEventListener('mouseup', () => {
     isDragging = false;
+    container.style.cursor = 'grab';
   });
 
-  function zoomIn() {
-    scale = Math.min(scale * 1.2, 5);
-    updateTransform();
-  }
-  function zoomOut() {
-    scale = Math.max(scale / 1.2, 0.4);
-    updateTransform();
-  }
-  function resetZoom() {
-    scale = 1;
-    posX = 0;
-    posY = 0;
-    updateTransform();
+  function zoomIn() { scale = Math.min(scale * 1.25, 6); updateTransform(); }
+  function zoomOut() { scale = Math.max(scale / 1.25, 0.3); updateTransform(); }
+  function resetZoom() { scale = 1; posX = 0; posY = 0; updateTransform(); }
+
+  // 切换编辑/查看模式
+  function toggleEditMode() {
+    isEditMode = !isEditMode;
+    const btn = document.getElementById('toggle-edit-btn');
+    const badge = document.getElementById('mode-badge');
+    const tip = document.getElementById('status-tip');
+    if (isEditMode) {
+      btn.classList.add('active');
+      wrapper.classList.add('editing');
+      badge.textContent = '编辑模式';
+      badge.style.color = '#38bdf8';
+      tip.textContent = '💡 当前为【编辑模式】：直接【双击图上任何文字】即可打字修改！修改完可一键导出！';
+    } else {
+      btn.classList.remove('active');
+      wrapper.classList.remove('editing');
+      badge.textContent = '查看模式';
+      badge.style.color = '#94a3b8';
+      tip.textContent = '💡 当前为【浏览模式】：按住鼠标左键可拖动平移，滚轮缩放查看细节。';
+      closeTextModal();
+    }
   }
 
-  // 适应屏幕自适应初始化
+  // 双击文字直接编辑
+  document.getElementById('main-svg').addEventListener('dblclick', (e) => {
+    if (!isEditMode) return;
+    if (e.target.tagName.toLowerCase() === 'text') {
+      currentEditingTextElement = e.target;
+      input.value = currentEditingTextElement.textContent.trim();
+      modal.style.display = 'block';
+      modal.style.left = `${Math.min(e.clientX, window.innerWidth - 300)}px`;
+      modal.style.top = `${Math.min(e.clientY - 20, window.innerHeight - 80)}px`;
+      input.focus();
+      input.select();
+    }
+  });
+
+  function confirmTextEdit() {
+    if (currentEditingTextElement) {
+      currentEditingTextElement.textContent = input.value;
+    }
+    closeTextModal();
+  }
+
+  function closeTextModal() {
+    modal.style.display = 'none';
+    currentEditingTextElement = null;
+  }
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') confirmTextEdit();
+    if (e.key === 'Escape') closeTextModal();
+  });
+
+  // 添加自定义文字
+  function addCustomText() {
+    const textVal = prompt('请输入要添加的文字/备注说明：', '新增备注说明');
+    if (!textVal) return;
+    const svg = document.getElementById('main-svg');
+    const newText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    newText.setAttribute('class', 'editable');
+    newText.setAttribute('x', '640');
+    newText.setAttribute('y', '380');
+    newText.setAttribute('font-size', '14');
+    newText.setAttribute('fill', '#dc2626');
+    newText.setAttribute('font-weight', 'bold');
+    newText.setAttribute('text-anchor', 'middle');
+    newText.setAttribute('font-family', "'PingFang SC', sans-serif");
+    newText.textContent = textVal;
+    svg.appendChild(newText);
+    alert('✅ 新文本已添加到画面正中央，可双击它修改内容！');
+  }
+
+  // 导出修改后的 SVG 矢量图
+  function exportSVG() {
+    const svgEl = document.getElementById('main-svg');
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const blob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'AB门接线图_已编辑.svg';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // 导出修改后的 PNG 高清大图
+  function exportPNG() {
+    const svgEl = document.getElementById('main-svg');
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const canvas = document.createElement('canvas');
+    canvas.width = 2560; // 2x 超高清
+    canvas.height = 1560;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    
+    img.onload = () => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const pngUrl = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = pngUrl;
+      a.download = 'AB门接线图_已编辑高清.png';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  }
+
+  // 自适应初始窗口大小
   window.addEventListener('DOMContentLoaded', () => {
     const containerW = container.clientWidth;
     if (containerW < 1300) {
